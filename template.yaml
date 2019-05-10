@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  aws-tempest-alexa-demo
+
+  Sample SAM Template for aws-tempest-alexa-demo
+
+Mappings:
+    Variables:
+        AlexaSkillKit:
+            Id: amzn1.ask.skill.5b2ae4ab-5f1d-4d26-8ccc-c7302fb7d9c8
+
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  AlexaSkillFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: alexa-skill/
+      Handler: app.lambda_handler
+      Runtime: python3.7
+
+  AlexaSkillFunctionPermission:
+        Type: AWS::Lambda::Permission
+        DependsOn: AlexaSkillFunction
+        Properties:
+            Action: lambda:InvokeFunction
+            EventSourceToken: !FindInMap
+                - Variables
+                - AlexaSkillKit
+                - Id
+            FunctionName: !GetAtt AlexaSkillFunction.Arn
+            Principal: alexa-connectedhome.amazon.com
+
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  AlexaSkillFunction:
+    Description: "Alexa Skill Lambda Function ARN"
+    Value: !GetAtt AlexaSkillFunction.Arn
+  AlexaSkillFunctionIamRole:
+    Description: "Implicit IAM Role created for Alexa Skill function"
+    Value: !GetAtt AlexaSkillFunctionRole.Arn

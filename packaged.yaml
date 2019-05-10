@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'aws-tempest-alexa-demo
+
+  Sample SAM Template for aws-tempest-alexa-demo
+
+  '
+Mappings:
+  Variables:
+    AlexaSkillKit:
+      Id: amzn1.ask.skill.5b2ae4ab-5f1d-4d26-8ccc-c7302fb7d9c8
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  AlexaSkillFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://werberm-sandbox/412e60456985e86e9551da6411ad5e25
+      Handler: app.lambda_handler
+      Runtime: python3.7
+  AlexaSkillFunctionPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: AlexaSkillFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      EventSourceToken:
+        Fn::FindInMap:
+        - Variables
+        - AlexaSkillKit
+        - Id
+      FunctionName:
+        Fn::GetAtt:
+        - AlexaSkillFunction
+        - Arn
+      Principal: alexa-connectedhome.amazon.com
+Outputs:
+  AlexaSkillFunction:
+    Description: Alexa Skill Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - AlexaSkillFunction
+      - Arn
+  AlexaSkillFunctionIamRole:
+    Description: Implicit IAM Role created for Alexa Skill function
+    Value:
+      Fn::GetAtt:
+      - AlexaSkillFunctionRole
+      - Arn
