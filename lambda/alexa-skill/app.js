@@ -4,7 +4,7 @@ exports.handler = function (request, context) {
         handleDiscovery(request, context, "");
     }
     else if (request.directive.header.namespace === 'Alexa.PowerController') {
-        if (request.directive.header.name === 'TurnOn' || request.directive.header.name === 'TurnOff') {
+        if (request.directive   .header.name === 'TurnOn' || request.directive.header.name === 'TurnOff') {
             log("DEBUG:", "TurnOn or TurnOff Request", JSON.stringify(request));
             handlePowerControl(request, context);
         }

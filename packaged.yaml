@@ -12,6 +12,7 @@ Mappings:
 Globals:
   Function:
     Timeout: 10
+    Runtime: nodejs8.10
     Environment:
       Variables:
         DEVICE_TABLE:
@@ -20,9 +21,19 @@ Resources:
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/7694c0bf72c7bdf8bdf7a7c746ac0303
+      CodeUri: s3://werberm-sandbox/2472f96f6c4542f37431c710bdfefa3e
       Handler: app.handler
-      Runtime: nodejs8.10
+  CreateThingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://werberm-sandbox/90dfaa3f9480022762af8005d6da034a
+      Handler: app.handler
+  RegisterThingToUserFunction:
+    AlexaSkillFunction: null
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://werberm-sandbox/9cc8013693f67d32a572c44045bcae71
+      Handler: app.handler
   AlexaSkillFunctionPermission:
     Type: AWS::Lambda::Permission
     DependsOn: AlexaSkillFunction
