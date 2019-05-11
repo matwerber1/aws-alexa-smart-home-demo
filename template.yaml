@@ -14,28 +14,52 @@ Mappings:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 10
+    Environment:
+      Variables:
+        DEVICE_TABLE: !Ref DeviceTable
+
 
 Resources:
   AlexaSkillFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: alexa-skill/
-      Handler: app.lambda_handler
-      Runtime: python3.7
+      Handler: app.handler
+      Runtime: nodejs8.10
 
   AlexaSkillFunctionPermission:
-        Type: AWS::Lambda::Permission
-        DependsOn: AlexaSkillFunction
-        Properties:
-            Action: lambda:InvokeFunction
-            EventSourceToken: !FindInMap
-                - Variables
-                - AlexaSkillKit
-                - Id
-            FunctionName: !GetAtt AlexaSkillFunction.Arn
-            Principal: alexa-connectedhome.amazon.com
+    Type: AWS::Lambda::Permission
+    DependsOn: AlexaSkillFunction
+    Properties:
+        Action: lambda:InvokeFunction
+        EventSourceToken: !FindInMap
+            - Variables
+            - AlexaSkillKit
+            - Id
+        FunctionName: !GetAtt AlexaSkillFunction.Arn
+        Principal: alexa-connectedhome.amazon.com
 
+  DeviceTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - 
+          AttributeName: hashId
+          AttributeType: S
+        -
+          AttributeName: sortId
+          AttributeType: S
+      KeySchema: 
+        - 
+          AttributeName: hashId
+          KeyType: HASH
+        - 
+          AttributeName: sortId
+          KeyType: RANGE
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

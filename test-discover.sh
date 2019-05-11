@@ -1,0 +1,1 @@
+sam local invoke -e discover-event.json

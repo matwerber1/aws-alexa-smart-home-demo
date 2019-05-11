@@ -11,14 +11,18 @@ Mappings:
       Id: amzn1.ask.skill.5b2ae4ab-5f1d-4d26-8ccc-c7302fb7d9c8
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 10
+    Environment:
+      Variables:
+        DEVICE_TABLE:
+          Ref: DeviceTable
 Resources:
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/412e60456985e86e9551da6411ad5e25
-      Handler: app.lambda_handler
-      Runtime: python3.7
+      CodeUri: s3://werberm-sandbox/7694c0bf72c7bdf8bdf7a7c746ac0303
+      Handler: app.handler
+      Runtime: nodejs8.10
   AlexaSkillFunctionPermission:
     Type: AWS::Lambda::Permission
     DependsOn: AlexaSkillFunction
@@ -34,6 +38,22 @@ Resources:
         - AlexaSkillFunction
         - Arn
       Principal: alexa-connectedhome.amazon.com
+  DeviceTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: hashId
+        AttributeType: S
+      - AttributeName: sortId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: hashId
+        KeyType: HASH
+      - AttributeName: sortId
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 Outputs:
   AlexaSkillFunction:
     Description: Alexa Skill Lambda Function ARN
