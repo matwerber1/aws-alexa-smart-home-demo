@@ -3,7 +3,11 @@
 ## AWS IoT
 
 An AWS IoT thing exists as a logical representation of each physical device.
-Each thing's thing name in IoT Core should be in the format **deviceType_serialNumber**.
+Each thing's name and other attributes/configuration are below:
+
+| Property | Value| Comments |
+|----------|------|----------|
+| **Thing Name** | deviceType_XXXX | **XXXX** is the device's serial number. | 
 
 ## Amazon DynamoDB
 

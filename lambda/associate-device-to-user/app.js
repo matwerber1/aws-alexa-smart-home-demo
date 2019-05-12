@@ -2,6 +2,8 @@ var util = require("util");
 var AWS = require("aws-sdk");
 var dynamodb = new AWS.DynamoDB();
 
+var deviceTableName = process.env.DEVICE_TABLE;
+
 exports.handler = async (event) => {
 
     try {
@@ -27,7 +29,6 @@ async function associateDeviceToUser(userId, thingName) {
 
     var hashId = "userId_" + userId;
     var sortId = "thingName_" + thingName;
-    var tableName = process.env.DEVICE_TABLE;
 
     //manufacturerName
     //modelName
@@ -45,7 +46,7 @@ async function associateDeviceToUser(userId, thingName) {
           }
         }, 
         ReturnConsumedCapacity: "TOTAL", 
-        TableName: tableName
+        TableName: deviceTableName
        };
     var response = await dynamodb.putItem(params).promise();
     console.log('PutItem response:\n' + JSON.stringify(response, null, 2));

@@ -40,7 +40,7 @@ Resources:
   AssociateThingToUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/ffcbe85a1bba0ae1f31c2825ec894875
+      CodeUri: s3://werberm-sandbox/49027dcc53703430695cebc733f33781
       Handler: app.handler
       Policies:
       - Statement:
@@ -88,7 +88,7 @@ Resources:
   GetDevicesByUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/7a35272f494c6d860a65d3f7b89f84bf
+      CodeUri: s3://werberm-sandbox/07dd2eff78b4c48e792e66b2763b5bb3
       Handler: app.handler
       Policies:
       - Statement:
