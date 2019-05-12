@@ -8,7 +8,7 @@ exports.handler = async (event) => {
         console.log(`Received event:\n${util.inspect(event)}`);
 
         var thing = event.thing;
-        thing.thingName = thing.deviceType + '-' + thing.serialNumber;
+        thing.thingName = thing.deviceType + '_' + thing.serialNumber;
 
         var thingExistsResponse = await thingExists(thing.thingName);
 
@@ -47,8 +47,8 @@ async function updateThing(thing) {
         thingName: thing.thingName,
         attributePayload: {
             attributes: {
-                'serial-number': thing.serialNumber,
-                'device-type': thing.deviceType
+                'serialNumber': thing.serialNumber,
+                'deviceType': thing.deviceType
             },
             merge: false
         },
@@ -95,12 +95,13 @@ async function createThing(thing) {
         thingName: thing.thingName,
         attributePayload: {
             attributes: {
-                'serial-number': thing.serialNumber,
-                'device-type': thing.deviceType
+                'serialNumber': thing.serialNumber,
+                'deviceType': thing.deviceType
           }
         }
     };
     console.log('Calling iot.createThing()...');
     var createThingResponse = await iot.createThing(params).promise();
+    console.log(`Thing created:\n${JSON.stringify(createThingResponse, null, 2)}`);
     return createThingResponse;
-}
+} 

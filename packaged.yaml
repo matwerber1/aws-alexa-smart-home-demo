@@ -26,7 +26,7 @@ Resources:
   CreateThingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/35a92d29aa4abde876d62a6ed246f825
+      CodeUri: s3://werberm-sandbox/da757771c8857aa156d23d49ebe26785
       Handler: app.handler
       Policies:
       - Statement:
@@ -64,7 +64,7 @@ Resources:
   CreateDeviceTypeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/cdf0917d10b5ceb65b063e49e09d03fb
+      CodeUri: s3://werberm-sandbox/62e1f5bab972c99ac61c386ce65352e9
       Handler: app.handler
       Policies:
       - Statement:
