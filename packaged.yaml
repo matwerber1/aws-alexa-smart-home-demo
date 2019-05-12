@@ -26,14 +26,85 @@ Resources:
   CreateThingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/90dfaa3f9480022762af8005d6da034a
+      CodeUri: s3://werberm-sandbox/35a92d29aa4abde876d62a6ed246f825
       Handler: app.handler
-  RegisterThingToUserFunction:
-    AlexaSkillFunction: null
+      Policies:
+      - Statement:
+        - Sid: IoTCreateThingPolicy
+          Effect: Allow
+          Action:
+          - iot:CreateThing
+          - iot:DescribeThing
+          - iot:UpdateThing
+          Resource: '*'
+  AssociateThingToUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/9cc8013693f67d32a572c44045bcae71
+      CodeUri: s3://werberm-sandbox/ffcbe85a1bba0ae1f31c2825ec894875
       Handler: app.handler
+      Policies:
+      - Statement:
+        - Sid: DynamoDBCrudPolicy
+          Effect: Allow
+          Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:BatchGetItem
+          - dynamodb:DescribeTable
+          Resource:
+          - Fn::GetAtt:
+            - DeviceTable
+            - Arn
+          - Fn::Sub: ${DeviceTable.Arn}/index/*
+  CreateDeviceTypeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://werberm-sandbox/cdf0917d10b5ceb65b063e49e09d03fb
+      Handler: app.handler
+      Policies:
+      - Statement:
+        - Sid: DynamoDBCrudPolicy
+          Effect: Allow
+          Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:BatchGetItem
+          - dynamodb:DescribeTable
+          Resource:
+          - Fn::GetAtt:
+            - DeviceTable
+            - Arn
+          - Fn::Sub: ${DeviceTable.Arn}/index/*
+  GetDevicesByUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://werberm-sandbox/7a35272f494c6d860a65d3f7b89f84bf
+      Handler: app.handler
+      Policies:
+      - Statement:
+        - Sid: DynamoDBReadPolicy
+          Effect: Allow
+          Action:
+          - dynamodb:GetItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:BatchGetItem
+          - dynamodb:DescribeTable
+          Resource:
+          - Fn::GetAtt:
+            - DeviceTable
+            - Arn
+          - Fn::Sub: ${DeviceTable.Arn}/index/*
   AlexaSkillFunctionPermission:
     Type: AWS::Lambda::Permission
     DependsOn: AlexaSkillFunction

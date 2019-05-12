@@ -1,0 +1,23 @@
+{
+	"deviceType": {
+		"name": "tempest",
+		"attributes": {
+			"manufacturerName": {
+				"type": "S",
+				"value": "Smarthome Products, Inc."
+			},
+			"modelName": {
+				"type": "S",
+				"value": "model 1"
+			},
+			"friendlyName": {
+				"type": "S",
+				"value": "Tempest Original"
+			},
+			"description": {
+				"type": "S",
+				"value": "Super cool smart home product"
+			}
+		}
+	}
+}

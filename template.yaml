@@ -10,8 +10,6 @@ Mappings:
         AlexaSkillKit:
             Id: amzn1.ask.skill.5b2ae4ab-5f1d-4d26-8ccc-c7302fb7d9c8
 
-
-
 Globals:
   Function:
     Timeout: 10
@@ -21,6 +19,7 @@ Globals:
         DEVICE_TABLE: !Ref DeviceTable
 
 Resources:
+
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -30,15 +29,87 @@ Resources:
   CreateThingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/create-thing/
+      CodeUri: lambda/create-device-thing/
       Handler: app.handler
+      Policies:
+        - Statement:
+          - 
+            Sid: IoTCreateThingPolicy
+            Effect: Allow
+            Action:
+              - iot:CreateThing
+              - iot:DescribeThing
+              - iot:UpdateThing
+            Resource: '*'
 
-  RegisterThingToUserFunction:
-    AlexaSkillFunction:
+  AssociateThingToUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/register-thing-to-user/
+      CodeUri: lambda/associate-device-to-user/
       Handler: app.handler
+      Policies:
+        - Statement:
+          - 
+            Sid: DynamoDBCrudPolicy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:DeleteItem
+              - dynamodb:PutItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:BatchGetItem
+              - dynamodb:DescribeTable
+            Resource: 
+              - !GetAtt DeviceTable.Arn
+              - !Sub "${DeviceTable.Arn}/index/*"
+
+  CreateDeviceTypeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/create-device-type/
+      Handler: app.handler
+      Policies:
+        - Statement:
+          - 
+            Sid: DynamoDBCrudPolicy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:DeleteItem
+              - dynamodb:PutItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:BatchGetItem
+              - dynamodb:DescribeTable
+            Resource: 
+              - !GetAtt DeviceTable.Arn
+              - !Sub "${DeviceTable.Arn}/index/*"
+
+  GetDevicesByUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/get-devices-by-user/
+      Handler: app.handler
+      Policies:
+        - Statement:
+            - 
+              Sid: DynamoDBReadPolicy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+                - dynamodb:Query
+                - dynamodb:BatchGetItem
+                - dynamodb:DescribeTable
+              Resource: 
+                - !GetAtt DeviceTable.Arn
+                - !Sub "${DeviceTable.Arn}/index/*"
+
 
   AlexaSkillFunctionPermission:
     Type: AWS::Lambda::Permission
