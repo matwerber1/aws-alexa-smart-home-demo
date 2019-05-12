@@ -22,6 +22,7 @@ async function getDevicesByUser(userId) {
     };
     var query_response = await dynamodb.query(params).promise();
     var userDeviceAssociations = query_response.Items;
+    console.log('User device associations:\n' + JSON.stringify(userDeviceAssociations, null, 2));
 
     // Get a hash map which, initially, has a blank object for each unique
     // deviceType within our users' list of associated devices. We will make
