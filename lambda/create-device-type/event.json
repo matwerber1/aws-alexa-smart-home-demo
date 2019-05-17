@@ -1,23 +1,17 @@
 {
-	"deviceType": {
-		"name": "tempest",
-		"attributes": {
-			"manufacturerName": {
-				"type": "S",
-				"value": "Smarthome Products, Inc."
-			},
-			"modelName": {
-				"type": "S",
-				"value": "model 1"
-			},
-			"friendlyName": {
-				"type": "S",
-				"value": "Tempest Original"
-			},
-			"description": {
-				"type": "S",
-				"value": "Super cool smart home product"
-			}
-		}
-	}
-}
+    "deviceType": "tempest",
+    "manufacturerName": "Smarthome Products, Inc.",
+    "modelName": "model 1",
+    "friendlyName": "Tempest Original",
+    "description": "Super cool smart home product",
+    "displayCategories": [
+      "OTHER"
+    ],
+    "capabilities": [
+      {
+        "type": "AlexaInterface",
+        "interface": "Alexa.ThermostatController",
+        "version": "3"
+      }
+    ]
+  }

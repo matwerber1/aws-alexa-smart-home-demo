@@ -38,53 +38,55 @@
         // Each device name has the device type as part of the name. We parse out
         // a list of unique device types from the list of device names into an 
         // object map, below. Initially, each key in the object is a deviceType
-        // equal to {}.
-        var deviceTypeMap = getDeviceTypeMapFromUserDeviceAssociations(userDeviceAssociations);
-        console.log("Device type map:\n" + JSON.stringify(deviceTypeMap, null, 2));
+        // equal to {}. By having a unique list of device types, we can do a single
+        // BatchGetItem() call to DDB to get all of the device type metadata at once.
+        // If we instead looped through each device once at a time to call DDB
+        // for the corresponding metadata, we would instead make multiple calls
+        // and potentially call to get the same metadata twice. 
+        var deviceTypeList = getDeviceTypeListFromUserDeviceAssociations(userDeviceAssociations);
+        console.log("Device type list:\n" + JSON.stringify(deviceTypeList, null, 2));
 
         // Now that we have the list of device types, we will query DDB for each
         // device type's metadata and then use that to populate our object map:
-        deviceTypeMap = await getDeviceTypeMapWithMetadata(deviceTypeMap);
-        console.log('DeviceType map with attributes:\n' + JSON.stringify(deviceTypeMap, null, 2));
+        var deviceTypeMetadata = await getDeviceTypeMetadata(deviceTypeList);
+        console.log('deviceTypeMetadata:\n' + JSON.stringify(deviceTypeMetadata, null, 2));
 
-        return deviceTypeMap;
+        // Combine the device associations with the metadata to get our final device list:
+        for (i in userDeviceAssociations) {
+            var deviceType = userDeviceAssociations[i].thingType;
+            console.log(`i=${i} and deviceType=${deviceType}`);
+            console.log('Data to merge: ' + JSON.stringify(deviceTypeMetadata[deviceType], null, 2));
+            Object.assign(userDeviceAssociations[i], deviceTypeMetadata[deviceType]);
+            
+        }
+        console.log('Updated user device associations:\n' + JSON.stringify(userDeviceAssociations, null, 2));
+
+        return userDeviceAssociations;
     }
 
-    function getDeviceTypeMapFromUserDeviceAssociations(userDeviceAssociations) {
+    function getDeviceTypeListFromUserDeviceAssociations(userDeviceAssociations) {
 
-        var deviceTypeMap = {};
+        var deviceTypeSet = new Set();
         userDeviceAssociations.forEach(userDeviceAssociation => {
-            var thingName = userDeviceAssociation.sortId;
-            // IoT device's thingName should be in format thingName_XXXXX_YYYY, 
-            // where XXXX is the deviceType and YYYY is the serial number. So, 
-            // the split below should provide just the deviceType:
-            var deviceType = thingName.split("_")[1];
-            deviceTypeMap[deviceType] = {};
+            deviceTypeSet.add(userDeviceAssociation.thingType);
         });
-
-        /* 
-            returns a map = {
-                tempest: {},
-                tempestv2: {}
-            }
-        */
-        return deviceTypeMap;
+        return Array.from(deviceTypeSet);
     }
 
-    async function getDeviceTypeMapWithMetadata(deviceTypeMap) {
+    async function getDeviceTypeMetadata(deviceTypeList) {
         
         /*
-            deviceTypeMap = {
-                tempest: {},
-                tempest2: {}
-            }
+            deviceTypeList = ['type1', 'type2', ...]
         */
         
-        if (isEmpty(deviceTypeMap)) {
-            return {};
+        var deviceTypeMetadata = {};
+        
+        if (deviceTypeList.length === 0) {
+            return deviceTypeMetadata;
         } else {
             var requestKeys = [];
-            for (var deviceTypeName in deviceTypeMap) {
+            for (index in deviceTypeList) {
+                var deviceTypeName = deviceTypeList[index];
                 var requestKey = {
                     hashId: 'deviceType_' + deviceTypeName, 
                     sortId: 'metadata'
@@ -98,35 +100,35 @@
             var params = {
                 RequestItems: requestItems
             };
-            console.log('Params are:\n' + JSON.stringify(params, null, 2));
+            console.log('BatchGet params are:\n' + JSON.stringify(params, null, 2));
             var batchGetResponse = await dynamodb.batchGet(params).promise();
             var metadataResponses = batchGetResponse.Responses[DEVICE_TABLE_NAME];
             /* metadataResponses = 
                 [
                     {
                         "hashId": "deviceType_tempest",
+                        "sortId": "metadata"
+                        "deviceType": "glow"
                         "manufacturerName": "Smarthome Products, Inc.",
                         "description": "Super cool smart home product",
                         "friendlyName": "Tempest Original",
                         "modelName": "model 1",
-                        "sortId": "metadata"
                     }
                 ]
             */
-            
+
             for (var index in metadataResponses) {
-                var metadataResponse = metadataResponses[index];
-                var deviceType = (metadataResponse.hashId).split("_")[1];
-                deviceTypeMap[deviceType] = metadataResponse;
+                var metadata = metadataResponses[index];
+                deviceTypeMetadata[metadata.deviceType] = metadata;
             }
-            return deviceTypeMap;
+            return deviceTypeMetadata;
         }
     }
 
-function isEmpty(obj) {
-    for(var key in obj) {
-        if(obj.hasOwnProperty(key))
-            return false;
+    function isEmpty(obj) {
+        for(var key in obj) {
+            if(obj.hasOwnProperty(key))
+                return false;
+        }
+        return true;
     }
-    return true;
-}

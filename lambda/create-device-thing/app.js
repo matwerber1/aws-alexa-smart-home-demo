@@ -33,14 +33,7 @@ exports.handler = async (event) => {
         }
     } catch (error) {
         console.log(`Error:\n${error}`);
-        const response = {
-            statusCode: 500,
-            error: {
-                type: (error.constructor.name),
-                message: error.message
-            }
-        };
-        return response;
+        throw error; 
     }
 };
 

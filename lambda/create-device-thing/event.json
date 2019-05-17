@@ -1,6 +1,6 @@
 {
-	"thing": {
-		"serialNumber": "0000001",
-		"deviceType": "tempest"
-	}
-}
+    "thing": {
+      "serialNumber": "0000001",
+      "deviceType": "tempest"
+    }
+  }
