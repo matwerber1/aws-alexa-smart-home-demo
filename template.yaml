@@ -9,7 +9,11 @@ Mappings:
     Variables:
         AlexaSkillKit:
             Id: amzn1.ask.skill.5b2ae4ab-5f1d-4d26-8ccc-c7302fb7d9c8
-
+        CognitoUserPool:
+            Region: us-east-1
+            UserPoolId: us-east-1_RUalF72PN
+            AppClientId: 7tvp5qug77lulnkbrk16gjtn80
+            
 Globals:
   Function:
     Timeout: 10
@@ -25,6 +29,43 @@ Resources:
     Properties:
       CodeUri: lambda/alexa-skill/
       Handler: app.handler
+      Environment:
+        Variables:
+          GET_DEVICES_BY_USER_FUNCTION: !Ref GetDevicesByUserFunction
+          VERIFY_COGNITO_TOKEN_FUNCTION: !Ref VerifyCognitoTokenFunction
+      Policies:
+        - Statement:
+          - 
+            Sid: InvokeOtherFunctions
+            Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: 
+              - !GetAtt GetDevicesByUserFunction.Arn
+              - !GetAtt VerifyCognitoTokenFunction.Arn
+
+  VerifyCognitoTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/verify-cognito-token/
+      Handler: app.handler
+      Environment:
+        Variables:
+          USER_POOL_ID:
+            !FindInMap
+            - Variables
+            - CognitoUserPool
+            - UserPoolId
+          REGION:
+            !FindInMap
+            - Variables
+            - CognitoUserPool
+            - Region
+          APP_CLIENT_ID:
+            !FindInMap
+            - Variables
+            - CognitoUserPool
+            - AppClientId
 
   CreateThingFunction:
     Type: AWS::Serverless::Function
@@ -116,7 +157,8 @@ Resources:
     DependsOn: AlexaSkillFunction
     Properties:
         Action: lambda:InvokeFunction
-        EventSourceToken: !FindInMap
+        EventSourceToken: 
+          !FindInMap
             - Variables
             - AlexaSkillKit
             - Id

@@ -14,11 +14,14 @@ exports.handler = async (event) => {
             message: `User ${event.userId} associated to thing ${event.thingName}`
         };
         return response;
-    } catch (err) {
-        console.log(`Error:\n${err}`);
+    } catch (error) {
+        console.log(`Error:\n${error}`);
         const response = {
             statusCode: 500,
-            message: err
+            error: {
+                type: (error.constructor.name),
+                message: error.message
+            }
         };
         return response;
     }

@@ -9,6 +9,10 @@ Mappings:
   Variables:
     AlexaSkillKit:
       Id: amzn1.ask.skill.5b2ae4ab-5f1d-4d26-8ccc-c7302fb7d9c8
+    CognitoUserPool:
+      Region: us-east-1
+      UserPoolId: us-east-1_RUalF72PN
+      AppClientId: 7tvp5qug77lulnkbrk16gjtn80
 Globals:
   Function:
     Timeout: 10
@@ -21,12 +25,53 @@ Resources:
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/2472f96f6c4542f37431c710bdfefa3e
+      CodeUri: s3://werberm-sandbox/5d7fdce48c2ceb3ff21f82af5328460c
       Handler: app.handler
+      Environment:
+        Variables:
+          GET_DEVICES_BY_USER_FUNCTION:
+            Ref: GetDevicesByUserFunction
+          VERIFY_COGNITO_TOKEN_FUNCTION:
+            Ref: VerifyCognitoTokenFunction
+      Policies:
+      - Statement:
+        - Sid: InvokeOtherFunctions
+          Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource:
+          - Fn::GetAtt:
+            - GetDevicesByUserFunction
+            - Arn
+          - Fn::GetAtt:
+            - VerifyCognitoTokenFunction
+            - Arn
+  VerifyCognitoTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://werberm-sandbox/275aad5bf4037198ea7222b6585f2cc5
+      Handler: app.handler
+      Environment:
+        Variables:
+          USER_POOL_ID:
+            Fn::FindInMap:
+            - Variables
+            - CognitoUserPool
+            - UserPoolId
+          REGION:
+            Fn::FindInMap:
+            - Variables
+            - CognitoUserPool
+            - Region
+          APP_CLIENT_ID:
+            Fn::FindInMap:
+            - Variables
+            - CognitoUserPool
+            - AppClientId
   CreateThingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/da757771c8857aa156d23d49ebe26785
+      CodeUri: s3://werberm-sandbox/1ab1858fbaf156474b5f5fb23ac13d2f
       Handler: app.handler
       Policies:
       - Statement:
@@ -40,7 +85,7 @@ Resources:
   AssociateThingToUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/49027dcc53703430695cebc733f33781
+      CodeUri: s3://werberm-sandbox/616e722dd3b27b8b63738c594c6ce16d
       Handler: app.handler
       Policies:
       - Statement:
@@ -64,7 +109,7 @@ Resources:
   CreateDeviceTypeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/62e1f5bab972c99ac61c386ce65352e9
+      CodeUri: s3://werberm-sandbox/3b0a6e1ecb76a364aa93d7a6f81e09e0
       Handler: app.handler
       Policies:
       - Statement:
@@ -88,7 +133,7 @@ Resources:
   GetDevicesByUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/07dd2eff78b4c48e792e66b2763b5bb3
+      CodeUri: s3://werberm-sandbox/b846392d14a41fe8da900ed527237e67
       Handler: app.handler
       Policies:
       - Statement:
