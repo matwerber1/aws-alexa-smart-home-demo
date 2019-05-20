@@ -11,7 +11,28 @@
       {
         "type": "AlexaInterface",
         "interface": "Alexa.ThermostatController",
-        "version": "3"
+        "version": "3",
+        "configuration": {
+            "supportsScheduling": false,
+            "supportedModes": [
+                "HEAT",
+                "COOL",
+                "OFF"
+            ],
+            "properties": {
+                "supported": [
+                    {
+                        "name": "targetSetpoint"
+                    },
+                    {
+                        "name": "thermostatMode"
+                    },
+                    {
+                        "name": "targetSetpointDelta"
+                    }
+                ]
+            }
+        }
       }
     ]
   }

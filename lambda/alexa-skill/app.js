@@ -55,6 +55,12 @@
                 handlePowerControl(request, context);
             }
         }
+        else if (request.directive.header.namespace === 'Alexa.ThermostatController') {
+            if (request.directive   .header.name === 'SetTargetTemperature' || request.directive.header.name === 'AdjustTargetTemperature') {
+                log("DEBUG: ", "Set or Adjust Temperature", JSON.stringify(request));
+                handlePowerControl(request, context);
+            }
+        }
 
         async function handleDiscovery(request, context) {
 
