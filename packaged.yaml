@@ -25,7 +25,7 @@ Resources:
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/5d7fdce48c2ceb3ff21f82af5328460c
+      CodeUri: s3://werberm-sandbox/79fe3a139d3c172d7c9af332087ee138
       Handler: app.handler
       Environment:
         Variables:
@@ -49,7 +49,7 @@ Resources:
   VerifyCognitoTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/275aad5bf4037198ea7222b6585f2cc5
+      CodeUri: s3://werberm-sandbox/5993b43785bea49168cdd031fa36e9f9
       Handler: app.handler
       Environment:
         Variables:
@@ -71,7 +71,7 @@ Resources:
   CreateThingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/1ab1858fbaf156474b5f5fb23ac13d2f
+      CodeUri: s3://werberm-sandbox/7c99620ecb391511b357ebb83e5a6463
       Handler: app.handler
       Policies:
       - Statement:
@@ -85,7 +85,7 @@ Resources:
   AssociateThingToUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/616e722dd3b27b8b63738c594c6ce16d
+      CodeUri: s3://werberm-sandbox/49b02ac393368f66d5530238757da4fb
       Handler: app.handler
       Policies:
       - Statement:
@@ -109,7 +109,7 @@ Resources:
   CreateDeviceTypeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/3b0a6e1ecb76a364aa93d7a6f81e09e0
+      CodeUri: s3://werberm-sandbox/4656b6e31cf4300d7de80613a7bd4fe2
       Handler: app.handler
       Policies:
       - Statement:
@@ -133,7 +133,7 @@ Resources:
   GetDevicesByUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/b846392d14a41fe8da900ed527237e67
+      CodeUri: s3://werberm-sandbox/4a4b8525f7ac767dc5e6d8e93d89cf43
       Handler: app.handler
       Policies:
       - Statement:

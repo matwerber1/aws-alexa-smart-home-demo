@@ -1,212 +1,265 @@
-    var AWS = require("aws-sdk");
-    var lambda = new AWS.Lambda();
+var AWS = require("aws-sdk");
+var lambda = new AWS.Lambda();
+var iot = new AWS.Iot(); 
 
-    var GET_DEVICES_BY_USER_FUNCTION = process.env.GET_DEVICES_BY_USER_FUNCTION;
-    var VERIFY_COGNITO_TOKEN_FUNCTION = process.env.VERIFY_COGNITO_TOKEN_FUNCTION;
+// example helper library from Alexa team; some, but not all, is used.
+let AlexaResponse = require("./AlexaResponse");
 
-    // Set to true when debugging with a hard-coded user ID / token for testing.
-    var debugMode = true;
-    var exampleEndpoints = {
-        endpoints: [
-            {
-                "endpointId": "demo_id",
-                "manufacturerName": "Smart Device Company",
-                "friendlyName": "Bedroom Outlet",
-                "description": "Smart Device Switch",
-                "displayCategories": ["SWITCH"],
-                "cookie": {
-                    "key1": "arbitrary key/value pairs for skill to reference this endpoint.",
-                    "key2": "There can be multiple entries",
-                    "key3": "but they should only be used for reference purposes.",
-                    "key4": "This is not a suitable place to maintain current endpoint state."
-                },
-                "capabilities":
-                [
-                    {
-                    "type": "AlexaInterface",
-                    "interface": "Alexa",
-                    "version": "3"
-                    },
-                    {
-                        "interface": "Alexa.PowerController",
-                        "version": "3",
-                        "type": "AlexaInterface",
-                        "properties": {
-                            "supported": [{
-                                "name": "powerState"
-                            }],
-                            "retrievable": true
-                        }
-                    }
-                ]
-            }
-        ]
+var GET_DEVICES_BY_USER_FUNCTION = process.env.GET_DEVICES_BY_USER_FUNCTION;
+var VERIFY_COGNITO_TOKEN_FUNCTION = process.env.VERIFY_COGNITO_TOKEN_FUNCTION;
+
+// Set to true when debugging with a hard-coded user ID / token for testing.
+var debugMode = false;
+
+exports.handler = async function (request, context, callback) {
+
+    log("DEBUG: ", "Alexa request:\n", JSON.stringify(request, null, 2));
+    
+    if (context !== undefined) {
+        log("DEBUG: ", "Alexa context:\n", JSON.stringify(context,null, 2));
     }
 
-    exports.handler = async function (request, context, callback) {
-
-        if (request.directive.header.namespace === 'Alexa.Discovery' && request.directive.header.name === 'Discover') {
-            log("DEBUG: ", "Discover request: \n", JSON.stringify(request,null, 2));
-            await handleDiscovery(request, context, "");
-        }
-        else if (request.directive.header.namespace === 'Alexa.PowerController') {
-            if (request.directive   .header.name === 'TurnOn' || request.directive.header.name === 'TurnOff') {
-                log("DEBUG: ", "TurnOn or TurnOff Request", JSON.stringify(request));
-                handlePowerControl(request, context);
-            }
-        }
-        else if (request.directive.header.namespace === 'Alexa.ThermostatController') {
-            if (request.directive   .header.name === 'SetTargetTemperature' || request.directive.header.name === 'AdjustTargetTemperature') {
-                log("DEBUG: ", "Set or Adjust Temperature", JSON.stringify(request));
-                handlePowerControl(request, context);
-            }
-        }
-
-        async function handleDiscovery(request, context) {
-
-            var header = request.directive.header;
-            header.name = "Discover.Response";
-            var endpoints = [];
-            var authTokenValidationResponse = await getAuthTokenValidationResponse(request.directive.payload.scope.token);
-
-            // Check whether auth token is valid
-            if (authTokenValidationResponse.hasOwnProperty('FunctionError')) {
-                // Per docs, if an error occurs for discovery, we still return a
-                // normal response, but the endpoints array must be empty. So, 
-                // all we can really do is print debugging messages on error.
-                // Per docs (https://developer.amazon.com/docs/device-apis/alexa-discovery.html) 
-                log("DEBUG: ", "Discovery error:\n", JSON.stringify(authTokenValidationResponse, null, 2));
-            } else {
-                var authToken = JSON.parse(authTokenValidationResponse.Payload);
-
-                // A Cognito sub is a unique id within the pool, separate from the username.
-                // In some cases, it's possible a user could their username, whereas the
-                // the sub is never changes. Hence, the sub is the better unique identifier.
-                // Depending on configuration, a Cognito sub and username might hold the same
-                // value, but we should still always use sub for pulling user data from Cognito. 
-                var userId = authToken.sub;
-                console.log(`Calling getUserDevices() for user ${userId}...`);
-                var userDevices = await getUserDevices(userId);
-                log("DEBUG: ", "User devices:\n", JSON.stringify(userDevices));
-                var endpoints = convertUserDevicesToEndpoints(userDevices);
-                log("DEBUG: ", "endpoints:\n", JSON.stringify(endpoints));
-            } 
-
-            var payload = {
-                endpoints: endpoints
-            };
-            log("DEBUG: ", "Discovery Response:\n", JSON.stringify({ header: header, payload: payload }));
-            context.succeed({ event: { header: header, payload: payload } });
-        }
-
-        function convertUserDevicesToEndpoints(userDevices) {
-            var endpoints = [];
-            for (var index in userDevices) {
-                var userDevice = userDevices[index];
-                var endpoint = {
-                    endpointId: userDevice.thingName,
-                    manufacturerName: userDevice.manufacturerName,
-                    friendlyName: userDevice.friendlyName,
-                    description: userDevice.description,
-                    displayCategories: userDevice.displayCategories,
-                    capabilities: userDevice.capabilities,
-                };
-                
-                endpoints.push(endpoint);
-                
-            }
-            return endpoints;
-        }
-
-        async function getAuthTokenValidationResponse(token) {
-            if (debugMode === true) {
-                log("DEBUG: ", "debugMode = true; expired auth tokens will be accepted so long as the rest of the token is ok.");
-            }
-            var payload = {
-                token: token,
-                ignoreExpiredToken: debugMode
-            }
-            var payloadAsString = JSON.stringify(payload);
-            var params = {
-                FunctionName: VERIFY_COGNITO_TOKEN_FUNCTION, 
-                InvocationType: "RequestResponse", 
-                Payload: payloadAsString
-            };
-            response = await lambda.invoke(params).promise();
-            return response;
-        }
-
-        async function getUserDevices(userId) {
-            
-            var payload = {
-                userId: userId
-            }
-            var payloadAsString = JSON.stringify(payload);
-            var params = {
-                FunctionName: GET_DEVICES_BY_USER_FUNCTION, 
-                InvocationType: "RequestResponse", 
-                Payload: payloadAsString
-            };
-            getUserDevicesResponse = await lambda.invoke(params).promise();
-            var payload = JSON.parse(getUserDevicesResponse.Payload);
-            return payload.deviceList;
-        }
-
-        function log(message, message1, message2) {
-            if (message2 == null) {
-                console.log(message + message1);
-            } else {
-                console.log(message + message1 + message2);
-            }
-        }
-
-        function handlePowerControl(request, context) {
-            // get device ID passed in during discovery
-            var requestMethod = request.directive.header.name;
-            var responseHeader = request.directive.header;
-            responseHeader.namespace = "Alexa";
-            responseHeader.name = "Response";
-            responseHeader.messageId = responseHeader.messageId + "-R";
-            // get user token pass in request
-            var requestToken = request.directive.endpoint.scope.token;
-            var powerResult;
-
-            if (requestMethod === "TurnOn") {
-
-                // Make the call to your device cloud for control
-                // powerResult = stubControlFunctionToYourCloud(endpointId, token, request);
-                powerResult = "ON";
-            }
-        else if (requestMethod === "TurnOff") {
-                // Make the call to your device cloud for control and check for success
-                // powerResult = stubControlFunctionToYourCloud(endpointId, token, request);
-                powerResult = "OFF";
-            }
-            var contextResult = {
-                "properties": [{
-                    "namespace": "Alexa.PowerController",
-                    "name": "powerState",
-                    "value": powerResult,
-                    "timeOfSample": "2017-09-03T16:20:50.52Z", //retrieve from result.
-                    "uncertaintyInMilliseconds": 50
-                }]
-            };
-            var response = {
-                context: contextResult,
-                event: {
-                    header: responseHeader,
-                    endpoint: {
-                        scope: {
-                            type: "BearerToken",
-                            token: requestToken
-                        },
-                        endpointId: "demo_id"
-                    },
-                    payload: {}
+    // Validate we have an Alexa directive
+    if (!('directive' in request)) {
+        log("ERROR: ", `Request is missing 'directive' key.`);
+        let alexaErrorResponse = new AlexaResponse(
+            {
+                "name": "ErrorResponse",
+                "payload": {
+                    "type": "INVALID_DIRECTIVE",
+                    "message": "Missing key: directive, Is request a valid Alexa directive?"
                 }
-            };
-            log("DEBUG", "Alexa.PowerController ", JSON.stringify(response));
-            context.succeed(response);
-            //callback(null, response);
+            });
+        return sendResponse(alexaErrorResponse.get());
+    }
+
+    // Check the payload version
+    if (request.directive.header.payloadVersion !== "3") {
+        log("ERROR: ", `Request's payload version is ${request.directive.header.payloadVersion} but this function requires version 3.`);
+        let alexaErrorResponse = new AlexaResponse(
+            {
+                "name": "ErrorResponse",
+                "payload": {
+                    "type": "INTERNAL_ERROR",
+                    "message": "This skill only supports Smart Home API version 3"
+                }
+            });
+        return sendResponse(alexaErrorResponse.get())
+    }
+
+    let namespace = ((request.directive || {}).header || {}).namespace;
+
+    if (namespace.toLowerCase() === 'alexa.discovery') {
+        log("DEBUG: ", "Calling handleDiscovery()...");
+        let alexaResponse = await handleDiscovery(request, context, "");
+        return sendResponse(alexaResponse.get());
+    }
+    else if (namespace.toLowerCase() === 'alexa.thermostatcontroller') {
+        log("DEBUG: ", "Calling handleThermostatControl()...");
+        let alexaResponse = await handleThermostatControl(request, context, "");
+        return sendResponse(alexaResponse.get());
+    }
+    else {
+        log("ERROR: ", `${namespace} is an unsupported Alexa namespace.`);
+        return new AlexaResponse(
+            {
+                "name": "ErrorResponse",
+                "payload": {
+                    "type": "INVALID_DIRECTIVE",
+                    "message": `Unsupported directive ${request.directive}.`
+                }
+            }).get();
+    }
+};
+
+async function handleDiscovery(request, context) {
+
+    let alexaResponse = new AlexaResponse({"namespace": "Alexa.Discovery", "name": "Discover.Response"});
+    var authTokenValidationResponse = await getAuthTokenValidationResponse(request.directive.payload.scope.token);
+
+    if (authTokenValidationResponse.hasOwnProperty('FunctionError')) {
+        log("ERROR: ", "Authentication error:\n", JSON.stringify(authTokenValidationResponse, null, 2));
+        alexaResponse.setEndpointsToEmptyArrayDueToDiscoveryError();
+    }
+    else {
+        var authToken = JSON.parse(authTokenValidationResponse.Payload);
+        var userId = authToken.sub;
+        var userDevices = await getUserDevices(userId);
+        log("DEBUG: ", "User devices:\n", JSON.stringify(userDevices));
+        var endpoints = convertUserDevicesToEndpoints(userDevices);
+        log("DEBUG: ", "Endpoints:\n", JSON.stringify(endpoints));
+        endpoints.forEach(endpoint => {
+            alexaResponse.addPayloadEndpoint(endpoint);
+        });
+    }
+
+    return alexaResponse;
+
+}
+
+function convertUserDevicesToEndpoints(userDevices) {
+    var endpoints = [];
+    for (var index in userDevices) {
+        var userDevice = userDevices[index];
+        var endpoint = {
+            endpointId: userDevice.thingName,
+            manufacturerName: userDevice.manufacturerName,
+            friendlyName: userDevice.friendlyName,
+            description: userDevice.description,
+            displayCategories: userDevice.displayCategories,
+            capabilities: userDevice.capabilities,
+        };
+        endpoints.push(endpoint);
+    }
+    return endpoints;
+}
+
+async function getAuthTokenValidationResponse(token) {
+    if (debugMode === true) {
+        log("DEBUG: ", "debugMode = true; expired auth tokens will be accepted so long as the rest of the token is ok.");
+    }
+    var payload = {
+        token: token,
+        ignoreExpiredToken: debugMode
+    }
+    var payloadAsString = JSON.stringify(payload);
+    var params = {
+        FunctionName: VERIFY_COGNITO_TOKEN_FUNCTION, 
+        InvocationType: "RequestResponse", 
+        Payload: payloadAsString
+    };
+    response = await lambda.invoke(params).promise();
+    return response;
+}
+
+async function getUserDevices(userId) {
+    
+    var payload = {
+        userId: userId
+    }
+    var payloadAsString = JSON.stringify(payload);
+    var params = {
+        FunctionName: GET_DEVICES_BY_USER_FUNCTION, 
+        InvocationType: "RequestResponse", 
+        Payload: payloadAsString
+    };
+    getUserDevicesResponse = await lambda.invoke(params).promise();
+    var payload = JSON.parse(getUserDevicesResponse.Payload);
+    return payload.deviceList;
+}
+
+function log(message, message1, message2) {
+    if (message2 == null) {
+        console.log(message + message1);
+    } else {
+        console.log(message + message1 + message2);
+    }
+}
+
+async function handleThermostatControl(request, context) {
+
+    let endpoint_id = request.directive.endpoint.endpointId;
+    let token = request.directive.endpoint.scope.token;
+    let correlationToken = request.directive.header.correlationToken;
+    let requestMethod = request.directive.header.name; 
+
+    let alexaResponse = new AlexaResponse(
+        {
+            "correlationToken": correlationToken,
+            "token": token,
+            "endpointId": endpoint_id
+        }
+    );
+    
+    log("DEBUG: ", `Request method is ${requestMethod}...`);
+
+    if (requestMethod === 'SetTargetTemperature') {
+        
+        targetpointContextProperty = {
+            namespace: "Alexa.ThermostatController",
+            name: "targetSetpoint",
+            value: {
+                value: request.directive.payload.targetSetpoint.value,
+                scale: request.directive.payload.targetSetpoint.scale
+            }
+        };
+        alexaResponse.addContextProperty(targetpointContextProperty);
+        return alexaResponse.get();
+    }
+    else {
+        log("ERROR: ", `Unsupported request method ${requestMethod} for ThermostatController.`);
+        return new AlexaResponse(
+            {
+                "name": "ErrorResponse",
+                "payload": {
+                    "type": "INTERNAL_ERROR",
+                    "message": `Unsupported request method ${requestMethod} for ThermostatController.`
+                }
+            }).get();
+    }
+    
+    /*
+    var requestMethod = request.directive.header.name;
+    var responseHeader = request.directive.header;
+    responseHeader.namespace = "Alexa";
+    responseHeader.name = "Response";
+    responseHeader.messageId = responseHeader.messageId + "-R";
+    var responseEndpoint = request.directive.endpoint;
+
+    var contextResult = {
+        properties: []      // not yet reporting properties
+    };
+
+    if (requestMethod === "SetTargetTemperature") {
+        var targetSetPointProperty = {
+            namespace: "Alexa.ThermostatController",
+            name: "targetSetpoint",
+            value: {
+                value: request.directive.payload.targetSetpoint.value,
+                scale: request.directive.payload.targetSetpoint.scale
+            },
+            timeOfSample: "2017-02-03T16:20:50.52Z",
+            uncertaintyInMilliseconds: 500
+        };
+
+        var thermostatModeProperty = {
+            namespace: "Alexa.ThermostatController",
+            name: "thermostatMode",
+            value: "HEAT",
+            timeOfSample: "2017-02-03T16:20:50.52Z",
+            uncertaintyInMilliseconds: 500
+        };
+        
+        context.properties.push(targetSetPointProperty);
+        context.properties.push(thermostatModeProperty);
+        
+    }
+    else if (requestMethod === "AdjustTargetTemperature") {
+
+    }
+    else if (requestMethod === "SetThermostatMode") {
+
+    } 
+    else {
+        // ERROR - unsupported directive
+    }
+
+    var response = {
+        context: contextResult,
+        event: {
+            header: responseHeader,
+            endpoint: responseEndpoint,
+            payload: {}
         }
     };
+    log("DEBUG: ", "Thermostat Control Response:\n", JSON.stringify(response));
+    context.succeed(response);
+    */
+}
+
+function sendResponse(response)
+{
+    // TODO Validate the response
+    log("DEBUG: ", "Lambda response:\n", JSON.stringify(response, null, 2));
+    return response
+}

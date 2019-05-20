@@ -33,6 +33,11 @@
                 ]
             }
         }
+      },
+      {
+        "type": "AlexaInterface",
+        "interface": "Alexa",
+        "version": "3"
       }
     ]
   }
