@@ -1,10 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'aws-tempest-alexa-demo
-
-  Sample SAM Template for aws-tempest-alexa-demo
+Description: 'aws-alexa-smart-home-demo
 
   '
+Parameters:
+  SmsExternalId:
+    Type: String
+    Default: dc1d721b-f54e-44e3-8c00-dd0a7e3fca10
+    Description: 'This must be a unique value (preferably a UUID) that is used to  grant
+      Cognito permission to send SMS on your behalf for user signup  verification.
+
+      '
 Mappings:
   Variables:
     AlexaSkillKit:
@@ -13,6 +19,8 @@ Mappings:
       Region: us-east-1
       UserPoolId: us-east-1_RUalF72PN
       AppClientId: 7tvp5qug77lulnkbrk16gjtn80
+    Iot:
+      Endpoint: a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com
 Globals:
   Function:
     Timeout: 10
@@ -22,10 +30,64 @@ Globals:
         DEVICE_TABLE:
           Ref: DeviceTable
 Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes:
+      - phone_number
+      MfaConfiguration: 'ON'
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 7
+      UsernameAttributes:
+      - phone_number
+      SmsConfiguration:
+        ExternalId:
+          Ref: SmsExternalId
+        SnsCallerArn:
+          Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/service-role/${CognitoSMSRole}
+  CognitoSMSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - cognito-idp.amazonaws.com
+          Action:
+          - sts:AssumeRole
+          Condition:
+            StringEquals:
+              sts:ExternalId:
+                Ref: SmsExternalId
+      Path: /
+  CognitoSMSPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: CognitoSMSPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - sns:publish
+          Resource:
+          - '*'
+      Roles:
+      - Ref: CognitoSMSRole
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/79fe3a139d3c172d7c9af332087ee138
+      CodeUri: s3://werberm-sandbox/923d9c394517b4c2ae1ea484ae32ce00
       Handler: app.handler
       Environment:
         Variables:
@@ -33,6 +95,11 @@ Resources:
             Ref: GetDevicesByUserFunction
           VERIFY_COGNITO_TOKEN_FUNCTION:
             Ref: VerifyCognitoTokenFunction
+          IOT_ENDPOINT:
+            Fn::FindInMap:
+            - Variables
+            - Iot
+            - Endpoint
       Policies:
       - Statement:
         - Sid: InvokeOtherFunctions
@@ -46,6 +113,12 @@ Resources:
           - Fn::GetAtt:
             - VerifyCognitoTokenFunction
             - Arn
+      - Statement:
+        - Sid: UpdateIotThingShadow
+          Effect: Allow
+          Action:
+          - iot:*
+          Resource: '*'
   VerifyCognitoTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -133,7 +206,7 @@ Resources:
   GetDevicesByUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://werberm-sandbox/4a4b8525f7ac767dc5e6d8e93d89cf43
+      CodeUri: s3://werberm-sandbox/9ae1737c986a648e6e152b7527b479a1
       Handler: app.handler
       Policies:
       - Statement:
@@ -181,6 +254,24 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+  SmartHomeThing:
+    Type: AWS::IoT::Thing
+    Properties:
+      ThingName: SmartHomeDemoThing_00000001
+      AttributePayload:
+        Attributes:
+          modelNumber: smartThing-v1
+          FirmwareVersion: '1.00'
+          SerialNumber: '1234556789'
+  IoTThingPolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: iot:*
+          Resource: '*'
 Outputs:
   AlexaSkillFunction:
     Description: Alexa Skill Lambda Function ARN
@@ -193,4 +284,10 @@ Outputs:
     Value:
       Fn::GetAtt:
       - AlexaSkillFunctionRole
+      - Arn
+  AlexaDefaultEndpoint:
+    Description: Used to configure skill in Alexa Developer Console.
+    Value:
+      Fn::GetAtt:
+      - AlexaSkillFunction
       - Arn

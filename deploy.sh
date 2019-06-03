@@ -1,5 +1,11 @@
-#sam local invoke -e discover-event.json
+BUCKET=werberm-sandbox
 
-sam package --template-file template.yaml --s3-bucket werberm-sandbox --output-template-file packaged.yaml
-sam deploy --template-file packaged.yaml --stack-name tempest-alexa-demo \
+sam package \
+    --s3-bucket $BUCKET \
+    --template-file template.yaml \
+    --output-template-file packaged.yaml
+
+sam deploy \
+    --template-file packaged.yaml \
+    --stack-name tempest-alexa-demo \
     --capabilities CAPABILITY_IAM

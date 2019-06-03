@@ -84,9 +84,11 @@ class AlexaResponse {
     addContextProperty(opts) {
 
         if (this.context === undefined)
-            this.context = {properties: []};
-
-        this.context.properties.push(this.createContextProperty(opts));
+            this.context = { properties: [] };
+        
+        if (opts !== null) {
+            this.context.properties.push(this.createContextProperty(opts));
+        }
     }
 
     /**

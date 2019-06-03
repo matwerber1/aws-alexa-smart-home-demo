@@ -1,9 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  aws-tempest-alexa-demo
+  aws-alexa-smart-home-demo
 
-  Sample SAM Template for aws-tempest-alexa-demo
+Parameters: 
+  SmsExternalId:
+    Type: String
+    Default: 'dc1d721b-f54e-44e3-8c00-dd0a7e3fca10'
+    Description: > 
+      This must be a unique value (preferably a UUID) that is used to 
+      grant Cognito permission to send SMS on your behalf for user signup 
+      verification.
 
 Mappings:
     Variables:
@@ -13,6 +20,8 @@ Mappings:
             Region: us-east-1
             UserPoolId: us-east-1_RUalF72PN
             AppClientId: 7tvp5qug77lulnkbrk16gjtn80
+        Iot:
+          Endpoint: a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com
             
 Globals:
   Function:
@@ -24,6 +33,83 @@ Globals:
 
 Resources:
 
+  # IoT Endpoint function courtesy of: 
+  # https://stackoverflow.com/questions/44588863/how-to-obtain-aws-iot-endpoint-url-from-within-a-cloudformation-template
+  IotEndpointProvider:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: IotEndpointProvider
+      Handler: iotEndpointProvider.handler
+      Runtime: nodejs10.x
+      CodeUri: lambda/iot-endpoint-provider/
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: 
+              - iot:DescribeEndpoint
+            Resource:
+              - '*'
+  IotEndpoint:
+    Type: 'Custom::IotEndpoint'
+    Properties:
+      ServiceToken: !GetAtt IotEndpointProvider.Arn
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties: 
+      AdminCreateUserConfig: 
+        AllowAdminCreateUserOnly: False
+      AutoVerifiedAttributes:
+        - 'phone_number'
+      MfaConfiguration: 'ON'    # Required for Alexa
+      Policies: 
+        PasswordPolicy: 
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 7
+      UsernameAttributes: 
+        - 'phone_number'
+      SmsConfiguration: 
+        ExternalId: !Ref SmsExternalId          
+        SnsCallerArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/${CognitoSMSRole}"
+
+  CognitoSMSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal: 
+              Service: 
+                - "cognito-idp.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+            Condition:
+              StringEquals:
+                "sts:ExternalId": !Ref SmsExternalId
+      Path: "/"
+  CognitoSMSPolicy: 
+    Type: "AWS::IAM::Policy"
+    Properties: 
+      PolicyName: "CognitoSMSPolicy"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Action: 
+              - "sns:publish"
+            Resource: 
+              - "*"
+      Roles: 
+        - Ref: CognitoSMSRole
+
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -33,6 +119,11 @@ Resources:
         Variables:
           GET_DEVICES_BY_USER_FUNCTION: !Ref GetDevicesByUserFunction
           VERIFY_COGNITO_TOKEN_FUNCTION: !Ref VerifyCognitoTokenFunction
+          IOT_ENDPOINT:
+            !FindInMap
+            - Variables
+            - Iot
+            - Endpoint
       Policies:
         - Statement:
           - 
@@ -43,6 +134,13 @@ Resources:
             Resource: 
               - !GetAtt GetDevicesByUserFunction.Arn
               - !GetAtt VerifyCognitoTokenFunction.Arn
+        - Statement:
+          - 
+            Sid: UpdateIotThingShadow
+            Effect: Allow
+            Action:
+              - iot:*
+            Resource: "*"
 
   VerifyCognitoTokenFunction:
     Type: AWS::Serverless::Function
@@ -56,11 +154,7 @@ Resources:
             - Variables
             - CognitoUserPool
             - UserPoolId
-          REGION:
-            !FindInMap
-            - Variables
-            - CognitoUserPool
-            - Region
+          REGION: !Ref "AWS::Region"
           APP_CLIENT_ID:
             !FindInMap
             - Variables
@@ -186,10 +280,39 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
+  SmartHomeThing:
+    Type: AWS::IoT::Thing
+    Properties: 
+      ThingName: SmartHomeDemoThing_00000001
+      AttributePayload:
+        Attributes: 
+          modelNumber: 'smartThing-v1'
+          FirmwareVersion: '1.00'
+          SerialNumber: '1234556789'
+  
+  IoTThingPolicy:
+    Type: AWS::IoT::Policy
+    Properties: 
+      PolicyDocument: {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": "iot:*",
+            "Resource": "*"
+          }
+        ]
+      }
+
 Outputs:
   AlexaSkillFunction:
     Description: "Alexa Skill Lambda Function ARN"
     Value: !GetAtt AlexaSkillFunction.Arn
+
   AlexaSkillFunctionIamRole:
     Description: "Implicit IAM Role created for Alexa Skill function"
     Value: !GetAtt AlexaSkillFunctionRole.Arn
+
+  AlexaDefaultEndpoint:
+    Description: Used to configure skill in Alexa Developer Console. 
+    Value: !GetAtt AlexaSkillFunction.Arn
