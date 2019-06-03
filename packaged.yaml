@@ -21,6 +21,8 @@ Globals:
       Variables:
         DEVICE_TABLE:
           Ref: DeviceTable
+        STACK_NAME:
+          Ref: AWS::StackName
 Resources:
   IotEndpointProvider:
     Type: AWS::Serverless::Function
@@ -36,6 +38,32 @@ Resources:
         - Effect: Allow
           Action:
           - iot:DescribeEndpoint
+          Resource:
+          - '*'
+  UserPoolClientSecretProvider:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: s3://werberm-sandbox/2e1c7c92d0b6c2d347c15a7c252198e7
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Sid: CognitoPermissions
+          Effect: Allow
+          Action:
+          - cognito-idp:DescribeUserPoolClient
+          Resource:
+          - '*'
+        - Sid: SecretsManagerPermissions
+          Effect: Allow
+          Action:
+          - secretsmanager:CreateSecret
+          - secretsmanager:TagResource
+          - secretsmanager:UpdateSecret
+          - secretsmanager:DeleteSecret
           Resource:
           - '*'
   UuidProvider:
@@ -86,6 +114,12 @@ Resources:
           - uuid
         SnsCallerArn:
           Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/service-role/${CognitoSMSRole}
+  CognitoAlexaAppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      GenerateSecret: true
+      UserPoolId:
+        Ref: CognitoUserPool
   CognitoSMSRole:
     Type: AWS::IAM::Role
     Properties:

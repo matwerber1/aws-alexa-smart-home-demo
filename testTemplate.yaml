@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  aws-alexa-smart-home-demo
+            
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs8.10
+    Environment:
+      Variables:
+        STACK_NAME: !Ref 'AWS::StackName'
+        #ALEXA_CLIENT_ID: !Ref CognitoAlexaAppClient
+
+Resources:
+
+  UserPoolClientSecretProvider:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: lambda/user-pool-client-secret-provider/
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        # TODO: Scope down this policy, it is overly permissive
+        - Version: '2012-10-17'
+          Statement:
+          - 
+            Sid: "CognitoPermissions"
+            Effect: Allow
+            Action: 
+              - 'cognito-idp:DescribeUserPoolClient'
+            Resource:
+              - '*'
+          - 
+            Sid: "SecretsManagerPermissions"
+            Effect: Allow
+            Action: 
+              - 'secretsmanager:CreateSecret'
+              - 'secretsmanager:TagResource'
+              - 'secretsmanager:UpdateSecret'
+              - 'secretsmanager:DeleteSecret'
+            Resource:
+              - '*'
+
+  UserPoolClientSecret:
+    Type: 'Custom::UserPoolClientSecret'
+    Properties:
+      ServiceToken: !GetAtt UserPoolClientSecretProvider.Arn
+      UserPoolId:  'us-east-1_RUalF72PN'
+      AppClientId: '7tvp5qug77lulnkbrk16gjtn80'
+      StackName: !Ref AWS::StackName
+
+#Outputs:
+
+ # UserPoolClientSecretArn:
+ #   Description: The app client secret ARN for Alexa. 
+ #   Value: !GetAtt UserPoolClientSecret.secretArn

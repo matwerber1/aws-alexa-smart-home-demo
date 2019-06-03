@@ -21,6 +21,8 @@ Globals:
     Environment:
       Variables:
         DEVICE_TABLE: !Ref DeviceTable
+        STACK_NAME: !Ref 'AWS::StackName'
+        #ALEXA_CLIENT_ID: !Ref CognitoAlexaAppClient
 
 Resources:
 
@@ -47,6 +49,36 @@ Resources:
             Resource:
               - '*'
 
+  UserPoolClientSecretProvider:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: lambda/user-pool-client-secret-provider/
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        # TODO: Scope down this policy, it is overly permissive
+        - Version: '2012-10-17'
+          Statement:
+          - 
+            Sid: "CognitoPermissions"
+            Effect: Allow
+            Action: 
+              - 'cognito-idp:DescribeUserPoolClient'
+            Resource:
+              - '*'
+          - 
+            Sid: "SecretsManagerPermissions"
+            Effect: Allow
+            Action: 
+              - 'secretsmanager:CreateSecret'
+              - 'secretsmanager:TagResource'
+              - 'secretsmanager:UpdateSecret'
+              - 'secretsmanager:DeleteSecret'
+            Resource:
+              - '*'
+
   UuidProvider:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -68,6 +100,15 @@ Resources:
     Properties:
       ServiceToken: !GetAtt UuidProvider.Arn
 
+  #CognitoAlexaAppClientSecret:
+  #  DependsOn: CognitoAlexaAppClient
+  #  DependsOn: CognitoUserPool
+  #  Type: 'Custom::CognitoAlexaAppClientSecret'
+  #  Properties:
+  #    ServiceToken: !GetAtt UserPoolClientSecretProvider.Arn
+  #    UserPoolId: !Ref CognitoUserPool
+  #    AppClientId: !Ref CognitoAlexaAppClient
+
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     DependsOn: CognitoSMSPolicy
@@ -88,8 +129,19 @@ Resources:
       UsernameAttributes: 
         - 'phone_number'
       SmsConfiguration:          
+        # The ExternalId must match the sts:ExternalId specified in the trust 
+        # policy of the IAM role references by SnsCallerArn. The external ID
+        # should be a random ID; to allow for automated deployment, we use a
+        # custom CloudFormation resource that generates a V4 UUID:
         ExternalId: !GetAtt ExternalId.uuid        
         SnsCallerArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/${CognitoSMSRole}"
+  
+  # App Client that allows Alexa to interact with our Cognito User Pool:
+  CognitoAlexaAppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties: 
+      GenerateSecret: true
+      UserPoolId: !Ref CognitoUserPool
 
   CognitoSMSRole:
     Type: AWS::IAM::Role
@@ -105,6 +157,9 @@ Resources:
               - "sts:AssumeRole"
             Condition:
               StringEquals:
+                # The ExternalId below must match the ExternalId we specify
+                # in the Cognito User Pool's SMS configuration; otherwise, the
+                # Cognito User Pool will fail to create:
                 "sts:ExternalId": !GetAtt ExternalId.uuid
       Path: "/service-role/"
 

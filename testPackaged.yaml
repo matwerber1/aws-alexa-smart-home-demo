@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "aws-alexa-smart-home-demo\n          \n"
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs8.10
+    Environment:
+      Variables:
+        STACK_NAME:
+          Ref: AWS::StackName
+Resources:
+  UserPoolClientSecretProvider:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: s3://werberm-sandbox/95810da1411d6a92d4abbc81e64699ef
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Sid: CognitoPermissions
+          Effect: Allow
+          Action:
+          - cognito-idp:DescribeUserPoolClient
+          Resource:
+          - '*'
+        - Sid: SecretsManagerPermissions
+          Effect: Allow
+          Action:
+          - secretsmanager:CreateSecret
+          - secretsmanager:TagResource
+          - secretsmanager:UpdateSecret
+          - secretsmanager:DeleteSecret
+          Resource:
+          - '*'
+  UserPoolClientSecret:
+    Type: Custom::UserPoolClientSecret
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - UserPoolClientSecretProvider
+        - Arn
+      UserPoolId: us-east-1_RUalF72PN
+      AppClientId: 7tvp5qug77lulnkbrk16gjtn80
+      StackName:
+        Ref: AWS::StackName
