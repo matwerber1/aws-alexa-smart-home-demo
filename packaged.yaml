@@ -3,14 +3,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: 'aws-alexa-smart-home-demo
 
   '
-Parameters:
-  SmsExternalId:
-    Type: String
-    Default: dc1d721b-f54e-44e3-8c00-dd0a7e3fca10
-    Description: 'This must be a unique value (preferably a UUID) that is used to  grant
-      Cognito permission to send SMS on your behalf for user signup  verification.
-
-      '
 Mappings:
   Variables:
     AlexaSkillKit:
@@ -30,8 +22,47 @@ Globals:
         DEVICE_TABLE:
           Ref: DeviceTable
 Resources:
+  IotEndpointProvider:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: s3://werberm-sandbox/f1b6d50d8458e202cad16a2b685e79aa
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - iot:DescribeEndpoint
+          Resource:
+          - '*'
+  UuidProvider:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: s3://werberm-sandbox/5aff70e6f987284f238e93382eb4aca1
+      MemorySize: 128
+      Timeout: 3
+  IotEndpoint:
+    Type: Custom::IotEndpoint
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - IotEndpointProvider
+        - Arn
+  ExternalId:
+    Type: Custom::ExternalId
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - UuidProvider
+        - Arn
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
+    DependsOn: CognitoSMSPolicy
     Properties:
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
@@ -50,7 +81,9 @@ Resources:
       - phone_number
       SmsConfiguration:
         ExternalId:
-          Ref: SmsExternalId
+          Fn::GetAtt:
+          - ExternalId
+          - uuid
         SnsCallerArn:
           Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/service-role/${CognitoSMSRole}
   CognitoSMSRole:
@@ -68,12 +101,15 @@ Resources:
           Condition:
             StringEquals:
               sts:ExternalId:
-                Ref: SmsExternalId
-      Path: /
+                Fn::GetAtt:
+                - ExternalId
+                - uuid
+      Path: /service-role/
   CognitoSMSPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: CognitoSMSPolicy
+      PolicyName:
+        Fn::Sub: ${AWS::StackName}-CognitoSMSPolicy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -96,10 +132,9 @@ Resources:
           VERIFY_COGNITO_TOKEN_FUNCTION:
             Ref: VerifyCognitoTokenFunction
           IOT_ENDPOINT:
-            Fn::FindInMap:
-            - Variables
-            - Iot
-            - Endpoint
+            Fn::GetAtt:
+            - IotEndpoint
+            - IotEndpointAddress
       Policies:
       - Statement:
         - Sid: InvokeOtherFunctions
@@ -132,10 +167,7 @@ Resources:
             - CognitoUserPool
             - UserPoolId
           REGION:
-            Fn::FindInMap:
-            - Variables
-            - CognitoUserPool
-            - Region
+            Ref: AWS::Region
           APP_CLIENT_ID:
             Fn::FindInMap:
             - Variables
@@ -257,7 +289,6 @@ Resources:
   SmartHomeThing:
     Type: AWS::IoT::Thing
     Properties:
-      ThingName: SmartHomeDemoThing_00000001
       AttributePayload:
         Attributes:
           modelNumber: smartThing-v1
@@ -273,6 +304,19 @@ Resources:
           Action: iot:*
           Resource: '*'
 Outputs:
+  IotEndpointAddress:
+    Description: The IoT Endpoint for this particular AWS account.
+    Value:
+      Fn::GetAtt:
+      - IotEndpoint
+      - IotEndpointAddress
+  SMSRoleExternalId:
+    Description: "The random UUID generated for the trust policy of the IAM role used\
+      \ by Cognito to send SMS verification messages. \n"
+    Value:
+      Fn::GetAtt:
+      - ExternalId
+      - uuid
   AlexaSkillFunction:
     Description: Alexa Skill Lambda Function ARN
     Value:

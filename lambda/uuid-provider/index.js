@@ -1,6 +1,14 @@
-const aws = require("aws-sdk");
+const uuidv4 = require('uuid/v4');
 
-exports.handler = function(event, context) {
+
+/* 
+ This function is meant to act as a custom CloudFormation resource which
+ generates a random v4 UUID. This could be used to generate an external ID
+ for a Cognito SMS configuration and corresponding IAM role's trust policy, 
+ or anything else that needs a UUID. 
+*/
+exports.handler = function (event, context) {
+
     console.log("REQUEST RECEIVED:\n" + JSON.stringify(event));
 
     // For Delete requests, immediately send a SUCCESS response.
@@ -9,21 +17,21 @@ exports.handler = function(event, context) {
         return;
     }
 
-    const iot = new aws.Iot();
-    iot.describeEndpoint({}, (err, data) => {
-    let responseData, responseStatus;
-        if (err) {
-            responseStatus = "FAILED";
-            responseData = { Error: "describeEndpoint call failed" };
-            console.log(responseData.Error + ":\n", err);
-        } else  {
-            responseStatus = "SUCCESS";
-            responseData = { IotEndpointAddress: data.endpointAddress };
-            console.log('response data: ' + JSON.stringify(responseData));
-        }
+    let responseData, responseStatus; 
 
-        sendResponse(event, context, responseStatus, responseData);
-    });
+    try {
+        responseStatus = "SUCCESS";
+        responseData = { uuid: uuidv4() };
+        console.log('response data: ' + JSON.stringify(responseData));
+    }
+    catch (err) {
+        responseStatus = "FAILED";
+        responseData = { Error: "Generation of UUIDv4 failed" };
+        console.log(responseData.Error + ":\n", err);
+    }
+    
+    sendResponse(event, context, responseStatus, responseData);
+
 };
 
 // Send response to the pre-signed S3 URL 

@@ -3,15 +3,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   aws-alexa-smart-home-demo
 
-Parameters: 
-  SmsExternalId:
-    Type: String
-    Default: 'dc1d721b-f54e-44e3-8c00-dd0a7e3fca10'
-    Description: > 
-      This must be a unique value (preferably a UUID) that is used to 
-      grant Cognito permission to send SMS on your behalf for user signup 
-      verification.
-
 Mappings:
     Variables:
         AlexaSkillKit:
@@ -33,13 +24,16 @@ Globals:
 
 Resources:
 
-  # IoT Endpoint function courtesy of: 
+  # IoT Endpoint function, adapted from: 
   # https://stackoverflow.com/questions/44588863/how-to-obtain-aws-iot-endpoint-url-from-within-a-cloudformation-template
+  # Each AWS Account has a different AWS IoT DNS Endpoint (or at least, its 
+  # not always the same). The endpoint can be obtained programmatically via an 
+  # API call. The function below is a custom CloudFormation resource that makes
+  # the API call for us and stores it as a retrievable property.
   IotEndpointProvider:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: IotEndpointProvider
-      Handler: iotEndpointProvider.handler
+      Handler: index.handler
       Runtime: nodejs10.x
       CodeUri: lambda/iot-endpoint-provider/
       MemorySize: 128
@@ -52,13 +46,31 @@ Resources:
               - iot:DescribeEndpoint
             Resource:
               - '*'
+
+  UuidProvider:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: lambda/uuid-provider/
+      MemorySize: 128
+      Timeout: 3
+
+  # This custom resource is used to retrieve the IoT Endpoint that we need.
   IotEndpoint:
     Type: 'Custom::IotEndpoint'
     Properties:
       ServiceToken: !GetAtt IotEndpointProvider.Arn
 
+  # This custom resource is used to retrieve the IoT Endpoint that we need.
+  ExternalId:
+    Type: 'Custom::ExternalId'
+    Properties:
+      ServiceToken: !GetAtt UuidProvider.Arn
+
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
+    DependsOn: CognitoSMSPolicy
     Properties: 
       AdminCreateUserConfig: 
         AllowAdminCreateUserOnly: False
@@ -75,8 +87,8 @@ Resources:
           TemporaryPasswordValidityDays: 7
       UsernameAttributes: 
         - 'phone_number'
-      SmsConfiguration: 
-        ExternalId: !Ref SmsExternalId          
+      SmsConfiguration:          
+        ExternalId: !GetAtt ExternalId.uuid        
         SnsCallerArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/${CognitoSMSRole}"
 
   CognitoSMSRole:
@@ -93,12 +105,13 @@ Resources:
               - "sts:AssumeRole"
             Condition:
               StringEquals:
-                "sts:ExternalId": !Ref SmsExternalId
-      Path: "/"
+                "sts:ExternalId": !GetAtt ExternalId.uuid
+      Path: "/service-role/"
+
   CognitoSMSPolicy: 
     Type: "AWS::IAM::Policy"
     Properties: 
-      PolicyName: "CognitoSMSPolicy"
+      PolicyName: !Sub "${AWS::StackName}-CognitoSMSPolicy"
       PolicyDocument: 
         Version: "2012-10-17"
         Statement: 
@@ -119,11 +132,7 @@ Resources:
         Variables:
           GET_DEVICES_BY_USER_FUNCTION: !Ref GetDevicesByUserFunction
           VERIFY_COGNITO_TOKEN_FUNCTION: !Ref VerifyCognitoTokenFunction
-          IOT_ENDPOINT:
-            !FindInMap
-            - Variables
-            - Iot
-            - Endpoint
+          IOT_ENDPOINT: !GetAtt IotEndpoint.IotEndpointAddress
       Policies:
         - Statement:
           - 
@@ -283,7 +292,6 @@ Resources:
   SmartHomeThing:
     Type: AWS::IoT::Thing
     Properties: 
-      ThingName: SmartHomeDemoThing_00000001
       AttributePayload:
         Attributes: 
           modelNumber: 'smartThing-v1'
@@ -305,6 +313,17 @@ Resources:
       }
 
 Outputs:
+
+  IotEndpointAddress:
+    Description: The IoT Endpoint for this particular AWS account. 
+    Value: !GetAtt IotEndpoint.IotEndpointAddress
+
+  SMSRoleExternalId:
+    Description: > 
+      The random UUID generated for the trust policy of the IAM role used by
+      Cognito to send SMS verification messages. 
+    Value: !GetAtt ExternalId.uuid
+
   AlexaSkillFunction:
     Description: "Alexa Skill Lambda Function ARN"
     Value: !GetAtt AlexaSkillFunction.Arn
