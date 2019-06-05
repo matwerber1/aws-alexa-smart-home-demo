@@ -2,9 +2,11 @@
 
 **Forgive the mess, this is a work in process, far from complete. Not yet ready to deploy!**
 
+**THIS README, THE COMMENTS/DOCS/ETC ARE NOT COMPLETE / CORRECT (YET)!**
+
 The current Alexa skill documentation provides solid Alexa API documentation and
 example Lambda functions with hard-coded JSON input events and responses, but 
-they do not provide a full, 'end-to-end' project. 
+they do not provide a full, 'end-to-end' dynamic project. 
 
 The goal of this project is to provide a fast, easy way to deploy an end-to-end
 solution that includes these key features: 
