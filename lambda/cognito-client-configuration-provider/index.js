@@ -1,7 +1,7 @@
 // Adapted from https://github.com/rosberglinhares/CloudFormationCognitoCustomResources/blob/master/CloudFormationCognitoUserPoolClientSettings.js
 const AWS = require('aws-sdk');
 
-exports.handler = async (event) => {
+exports.handler = async (event, context, callback) => {
 
     console.log("REQUEST RECEIVED:\n" + JSON.stringify(event));
     let responseData, responseStatus;
