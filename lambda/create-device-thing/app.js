@@ -81,12 +81,6 @@ async function thingExists(thingName) {
 
 async function createThing(thing) {
 
-    /*
-        thing:
-            serialNumber: '0000001'
-            deviceType: 'tempest'
-    */
-
     var params = {
         thingName: thing.thingName,
         attributePayload: {

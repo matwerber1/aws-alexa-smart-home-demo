@@ -103,19 +103,6 @@
             console.log('BatchGet params are:\n' + JSON.stringify(params, null, 2));
             var batchGetResponse = await dynamodb.batchGet(params).promise();
             var metadataResponses = batchGetResponse.Responses[DEVICE_TABLE_NAME];
-            /* metadataResponses = 
-                [
-                    {
-                        "hashId": "deviceType_tempest",
-                        "sortId": "metadata"
-                        "deviceType": "glow"
-                        "manufacturerName": "Smarthome Products, Inc.",
-                        "description": "Super cool smart home product",
-                        "friendlyName": "Tempest Original",
-                        "modelName": "model 1",
-                    }
-                ]
-            */
 
             for (var index in metadataResponses) {
                 var metadata = metadataResponses[index];

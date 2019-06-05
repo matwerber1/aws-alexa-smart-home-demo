@@ -1,8 +1,8 @@
 {
-    "deviceType": "tempest",
+    "deviceType": "Smart Home Device",
     "manufacturerName": "Smarthome Products, Inc.",
     "modelName": "model 1",
-    "friendlyName": "Tempest Original",
+    "friendlyName": "Smart Device",
     "description": "Super cool smart home product",
     "displayCategories": [
       "OTHER"

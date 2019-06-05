@@ -1,6 +1,5 @@
 BUCKET=werberm-sandbox
 STACK_NAME=aws-alexa-smart-home-demo
-#STACK_NAME=tempest-alexa-demo
 
 sam package \
     --s3-bucket $BUCKET \
