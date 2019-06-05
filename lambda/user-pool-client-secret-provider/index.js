@@ -1,12 +1,18 @@
-//const https = require("https");
 const axios = require("axios");
-const url = require("url");
-
 const aws = require("aws-sdk");
 const cognito = new aws.CognitoIdentityServiceProvider();
 const secretsmanager = new aws.SecretsManager();
 
+// if debug = true, we skip the step of attempting to post results to a signed
+// S3 URL as our test event would, in theory, contain a static / old / invalid
+// S3 URL instead of the freshly-generated URL that is received during a real
+// CloudFormation deployment:
 const debug = false; 
+// If true, secrets are deleted immediately and not recoverable;
+// If false, secrets are deleted but may be recovered within 7 days if needed: 
+const deleteImmediately = false; 
+const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME;
+
 
 /*
   This function acts as a custom CloudFormation resource and therefore must
@@ -15,68 +21,42 @@ const debug = false;
 exports.handler = async function (event, context, callback) {
   
     console.log("REQUEST RECEIVED:\n" + JSON.stringify(event));
+    let responseData, responseStatus;
 
-    const userPoolId = event.ResourceProperties.UserPoolId;
-    const appClientId = event.ResourceProperties.AppClientId;
-    const stackName = event.ResourceProperties.StackName;
-    const resourceId = event.LogicalResourceId;
-    const requestType = event.RequestType; 
-    let responseData, responseStatus; 
+    try {
 
-    if (requestType == "Delete") {
-        try {
-            console.log('Deleting secret in AWS Secrets Manager...');
-            var secretName = event.PhysicalResourceId;
-            var secretPayload = {
-                UserPoolId: userPoolId,
-                ClientId: appClientId,
-                ClientSecret: clientSecret
-            };
-            var params = {
-                SecretId: secretName,
-                RecoveryWindowInDays: 7
-            };
-            var secretResponse = await secretsmanager.deleteSecret(params).promise();
-            responseData = {
-                secretArn: secretResponse.ARN,
-                secretName: secretResponse.Name, 
-                secretVersionId: secretResponse.secretVersionId
-            };
-            console.log('Delete secret response data: ' + JSON.stringify(responseData));
-            responseStatus = "SUCCESS";
-        }
-        catch (err) {
-            responseStatus = "FAILED";
-            responseData = { Error: "Delete of client app secret failed." };
-            console.log(responseData.Error + ":\n", err);
-        }
-    }
-    else if (requestType === "Create") {
-        try {
-            var params = {
-                UserPoolId: userPoolId,
-                ClientId: appClientId
-            };
-            // First, get the app client secret value: 
-            console.log('Getting app client secret from Cognito...')
-            var describeResponse = await cognito.describeUserPoolClient(params).promise();
+        // Given that a stack ID is in the format arn:aws:cloudformation:REGION:ACCOUNT:stack/STACKNAME/VERSION,
+        // We can parse the stack name from the stack ID by splitting on a '/':
+        const stackName = (event.StackId).split('/')[1];
+        const userPoolId = event.ResourceProperties.UserPoolId;
+        const appClientId = event.ResourceProperties.AppClientId;
+        const resourceId = event.LogicalResourceId;
+        const requestType = event.RequestType;
+        responseStatus = "SUCCESS";
+
+        if (requestType === "Create") {
+        
+            console.log('Getting app client secret from Cognito...');
+            var describeResponse = await cognito.describeUserPoolClient(
+                {
+                    UserPoolId: userPoolId,
+                    ClientId: appClientId
+                }
+            ).promise();
+            
+            console.log('Storing secret in AWS Secrets Manager...');
             var clientSecret = describeResponse.UserPoolClient.ClientSecret;
-            console.log('Storing secret in AWS Secrets Manager...');            
-            var secretName;
-            if (debug === true) {
-                secretName = 'mySmartHomeDebugAppClientSecret';
-                clientSecret = 'mySecret'
-            } else {
-                secretName = generateSecretName(stackName, resourceId); 
-            } 
+            var secretName = generateSecretName(stackName, resourceId);
+
             var secretPayload = {
                 userPoolId: userPoolId,
                 clientId: appClientId,
                 clientSecret: clientSecret
             };
-            var params = {
-                Description: `App client secret for app ${appClientId} of Cognito user pool ${userPoolId} for CF stack ${stackName}`, 
-                Name: secretName, 
+
+            var createSecretParams = {
+                Description: `App client secret for app ${appClientId} of Cognito user pool ${userPoolId} for CF stack ${stackName}`,
+                Name: secretName,
                 SecretString: JSON.stringify(secretPayload),
                 Tags: [
                     {
@@ -89,57 +69,86 @@ exports.handler = async function (event, context, callback) {
                     },
                     {
                         Key: 'custom:cloudformation:created-by',
-                        Value: 'lambda function ' + process.env.AWS_LAMBDA_FUNCTION_NAME
+                        Value: 'lambda function ' + functionName
                     },
                 ]
-               };
-            var secretResponse = await secretsmanager.createSecret(params).promise();
+            };
+            
+            var secretResponse = await secretsmanager.createSecret(
+                createSecretParams
+            ).promise();
+
             responseData = {
                 SecretArn: secretResponse.ARN,
-                SecretName: secretResponse.Name, 
+                SecretName: secretResponse.Name,
                 SecretVersionId: secretResponse.secretVersionId
             };
-            console.log('Create secret response data: ' + JSON.stringify(responseData));
-            responseStatus = "SUCCESS";
         }
-        catch (err) {
-            responseStatus = "FAILED";
-            responseData = { Error: "Create client app secret failed." };
-            console.log(responseData.Error + ":\n", err);
-        }
-    }
-    else if (requestType === "Update") {
-        try {
+        else if (requestType === "Update") {
+
+            console.log('Getting app client secret from Cognito...')
+            var describeResponse = await cognito.describeUserPoolClient(
+                {
+                    UserPoolId: userPoolId,
+                    ClientId: appClientId
+                }
+            ).promise();
+        
+            var clientSecret = describeResponse.UserPoolClient.ClientSecret;
+
             console.log('Updating secret in AWS Secrets Manager...');
             var secretName = event.PhysicalResourceId;
-            console.log('secret name is ' + secretName)
             var secretPayload = {
                 UserPoolId: userPoolId,
                 ClientId: appClientId,
                 ClientSecret: clientSecret
             };
-            var params = {
+            var updateSecretParams = {
                 SecretId: secretName,
-                Description: `App client secret for app ${appClientId} of Cognito user pool ${userPoolId} for CF stack ${stackName}`, 
+                Description: `App client secret for app ${appClientId} of Cognito user pool ${userPoolId} for CF stack ${stackName}`,
                 SecretString: JSON.stringify(secretPayload),
             };
-            var secretResponse = await secretsmanager.updateSecret(params).promise();
+            var secretResponse = await secretsmanager.updateSecret(updateSecretParams).promise();
             responseData = {
                 SecretArn: secretResponse.ARN,
-                SecretName: secretResponse.Name, 
+                SecretName: secretResponse.Name,
                 SecretVersionId: secretResponse.secretVersionId
             };
             console.log('Update secret response data: ' + JSON.stringify(responseData));
-            responseStatus = "SUCCESS";
         }
-        catch (err) {
-            responseStatus = "FAILED";
-            responseData = { Error: "Update of client app secret failed." };
-            console.log(responseData.Error + ":\n", err);
+        else if (requestType == "Delete") {
+
+            console.log('Deleting secret in AWS Secrets Manager...');
+            var secretName = event.PhysicalResourceId;
+            var secretPayload = {
+                UserPoolId: userPoolId,
+                ClientId: appClientId,
+                ClientSecret: clientSecret
+            };
+            var deleteParams = {
+                SecretId: secretName
+            };
+
+            if (deleteImmediately === false) {
+                deleteParams.RecoveryWindowInDays = 7;
+            } else {
+                deleteParams.ForceDeleteWithoutRecovery = true;
+            }
+
+            var secretResponse = await secretsmanager.deleteSecret(deleteParams).promise();
+            responseData = {
+                SecretArn: secretResponse.ARN,
+                SecretName: secretResponse.Name
+            };
+            console.log('Delete secret response data: ' + JSON.stringify(responseData));
         }
-    } else {
+        else {
+            throw new Error(`Invalid requestType of '${requestType}'.`);
+        }
+    }
+    catch (err) {
         responseStatus = "FAILED";
-        responseData = { Error: "Invalid requestType of '${requestType}'." };
+        responseData = { Error: err };
         console.log(responseData.Error + ":\n", err);
     }
 
@@ -147,14 +156,14 @@ exports.handler = async function (event, context, callback) {
 
 };
 
-// Send response to the pre-signed S3 URL 
+
+
 async function sendResponse(event, context, callback, responseStatus, responseData) {
 
     var signedUrl = event.ResponseURL;
     var responseBody = JSON.stringify({
         Status: responseStatus,
         Reason: "See the details in CloudWatch Log Stream: " + context.logStreamName,
-        //PhysicalResourceId: context.logStreamName,
         PhysicalResourceId: responseData.SecretName,
         StackId: event.StackId,
         RequestId: event.RequestId,
@@ -183,38 +192,6 @@ async function sendResponse(event, context, callback, responseStatus, responseDa
     }
     callback(null);
 
-
-
-    /*
-    var options = {
-        hostname: parsedUrl.hostname,
-        port: 443,
-        path: parsedUrl.path,
-        method: "PUT",
-        headers: {
-            "content-type": "",
-            "content-length": responseBody.length
-        }
-    };
-
-    console.log("SENDING RESPONSE...\n");
-    var request = https.request(options, function(response) {
-        console.log("STATUS: " + response.statusCode);
-        console.log("HEADERS: " + JSON.stringify(response.headers));
-        // Tell AWS Lambda that the function execution is done  
-        context.done();
-    });
-
-    request.on("error", function(error) {
-        console.log("sendResponse Error:" + error);
-        // Tell AWS Lambda that the function execution is done  
-        context.done();
-    });
-
-    // write data to request body
-    request.write(responseBody);
-    request.end();
-    */
 }
 
 

@@ -3,17 +3,15 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   aws-alexa-smart-home-demo
 
-Mappings:
-    Variables:
-        AlexaSkillKit:
-            Id: amzn1.ask.skill.5b2ae4ab-5f1d-4d26-8ccc-c7302fb7d9c8
-        CognitoUserPool:
-            Region: us-east-1
-            UserPoolId: us-east-1_RUalF72PN
-            AppClientId: 7tvp5qug77lulnkbrk16gjtn80
-        Iot:
-          Endpoint: a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com
-            
+Mappings: 
+  Config: 
+    Alexa: 
+      SkillId: 'amzn1.ask.skill.1bb2f0b3-c480-43a8-a428-e201ea6b04b3'   # Obtain from https://developer.amazon.com/alexa/console/ask
+      VendorId: 'MGPNN68VCOJJ4'                                         # Obtain from https://developer.amazon.com/settings/console/mycid
+      CustomerId: 'A2JPVXNA7ZPISI'                                      # Obtain from https://developer.amazon.com/settings/console/mycid
+    Cognito:
+      DomainPrefix: 'werberm-smarthome-test'   # If error occurs while Custom:CognitoDomain is created, this prefix may already be in use by someone else. 
+
 Globals:
   Function:
     Timeout: 10
@@ -22,16 +20,15 @@ Globals:
       Variables:
         DEVICE_TABLE: !Ref DeviceTable
         STACK_NAME: !Ref 'AWS::StackName'
-        #ALEXA_CLIENT_ID: !Ref CognitoAlexaAppClient
 
 Resources:
+  
+  ##############################################################################
+  IotEndpoint:
+    Type: 'Custom::IotEndpoint'
+    Properties:
+      ServiceToken: !GetAtt IotEndpointProvider.Arn
 
-  # IoT Endpoint function, adapted from: 
-  # https://stackoverflow.com/questions/44588863/how-to-obtain-aws-iot-endpoint-url-from-within-a-cloudformation-template
-  # Each AWS Account has a different AWS IoT DNS Endpoint (or at least, its 
-  # not always the same). The endpoint can be obtained programmatically via an 
-  # API call. The function below is a custom CloudFormation resource that makes
-  # the API call for us and stores it as a retrievable property.
   IotEndpointProvider:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -48,6 +45,15 @@ Resources:
               - iot:DescribeEndpoint
             Resource:
               - '*'
+
+
+  ##############################################################################
+  UserPoolClientSecret:
+    Type: 'Custom::UserPoolClientSecret'
+    Properties:
+      ServiceToken: !GetAtt UserPoolClientSecretProvider.Arn
+      UserPoolId:  !Ref CognitoUserPool
+      AppClientId: !Ref CognitoAlexaAppClient
 
   UserPoolClientSecretProvider:
     Type: 'AWS::Serverless::Function'
@@ -78,7 +84,15 @@ Resources:
               - 'secretsmanager:DeleteSecret'
             Resource:
               - '*'
+  
 
+  ##############################################################################
+  
+  ExternalId:
+    Type: 'Custom::ExternalId'
+    Properties:
+      ServiceToken: !GetAtt UuidProvider.Arn
+      
   UuidProvider:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -88,26 +102,11 @@ Resources:
       MemorySize: 128
       Timeout: 3
 
-  # This custom resource is used to retrieve the IoT Endpoint that we need.
-  IotEndpoint:
-    Type: 'Custom::IotEndpoint'
-    Properties:
-      ServiceToken: !GetAtt IotEndpointProvider.Arn
 
-  # This custom resource is used to retrieve the IoT Endpoint that we need.
-  ExternalId:
-    Type: 'Custom::ExternalId'
-    Properties:
-      ServiceToken: !GetAtt UuidProvider.Arn
+  ##############################################################################
 
-  #CognitoAlexaAppClientSecret:
-  #  DependsOn: CognitoAlexaAppClient
-  #  DependsOn: CognitoUserPool
-  #  Type: 'Custom::CognitoAlexaAppClientSecret'
-  #  Properties:
-  #    ServiceToken: !GetAtt UserPoolClientSecretProvider.Arn
-  #    UserPoolId: !Ref CognitoUserPool
-  #    AppClientId: !Ref CognitoAlexaAppClient
+
+  ##############################################################################
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
@@ -142,6 +141,75 @@ Resources:
     Properties: 
       GenerateSecret: true
       UserPoolId: !Ref CognitoUserPool
+
+  CognitoClientConfiguration:
+    Type: 'Custom::CognitoCognitoClientConfiguration'
+    Properties:
+      ServiceToken: !GetAtt CognitoClientConfigurationProvider.Arn
+      UserPoolId: !Ref CognitoUserPool
+      UserPoolClientId: !Ref CognitoAlexaAppClient
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURL:
+          Fn::Join:
+            - ""
+            - - "https://pitangui.amazon.com/api/skill/link/"
+              - !FindInMap [Config, Alexa, VendorId]  
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - openid
+        - phone
+  
+  CognitoClientConfigurationProvider: 
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: lambda/cognito-client-configuration-provider/
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+          -
+            Effect: Allow
+            Action: 'cognito-idp:UpdateUserPoolClient'
+            Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+
+  CognitoDomain:
+    Type: 'Custom::CognitoUserPoolDomain'
+    Properties:
+      ServiceToken: !GetAtt CognitoDomainProvider.Arn
+      DomainPrefix: !FindInMap [Config, Cognito, DomainPrefix]
+      UserPoolId: !Ref CognitoUserPool
+      ClientId: !Sub CognitoAlexaAppClient
+
+  CognitoDomainProvider:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: lambda/cognito-user-pool-domain/
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+          -
+            Effect: Allow
+            Action: 'cognito-idp:CreateUserPoolDomain'
+            Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+          -
+            Effect: Allow
+            Action: 'cognito-idp:DeleteUserPoolDomain'
+            Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+          -
+            Effect: Allow
+            Action: 'cognito-idp:DescribeUserPoolDomain'
+            Resource: '*'
 
   CognitoSMSRole:
     Type: AWS::IAM::Role
@@ -178,6 +246,19 @@ Resources:
       Roles: 
         - Ref: CognitoSMSRole
 
+  VerifyCognitoTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/verify-cognito-token/
+      Handler: app.handler
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref CognitoUserPool
+          REGION: !Ref "AWS::Region"
+          APP_CLIENT_ID: !Ref CognitoAlexaAppClient
+
+  ##############################################################################
+
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -206,24 +287,41 @@ Resources:
               - iot:*
             Resource: "*"
 
-  VerifyCognitoTokenFunction:
-    Type: AWS::Serverless::Function
+  AlexaSkillFunctionPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: AlexaSkillFunction
     Properties:
-      CodeUri: lambda/verify-cognito-token/
-      Handler: app.handler
-      Environment:
-        Variables:
-          USER_POOL_ID:
-            !FindInMap
-            - Variables
-            - CognitoUserPool
-            - UserPoolId
-          REGION: !Ref "AWS::Region"
-          APP_CLIENT_ID:
-            !FindInMap
-            - Variables
-            - CognitoUserPool
-            - AppClientId
+        Action: lambda:InvokeFunction
+        EventSourceToken: !FindInMap [Config, Alexa, SkillId]
+        FunctionName: !GetAtt AlexaSkillFunction.Arn
+        Principal: alexa-connectedhome.amazon.com
+
+  ##############################################################################
+
+  SmartHomeThing:
+    Type: AWS::IoT::Thing
+    Properties: 
+      AttributePayload:
+        Attributes: 
+          modelNumber: 'smartThing-v1'
+          FirmwareVersion: '1.00'
+          SerialNumber: '1234556789'
+  
+  IoTThingPolicy:
+    Type: AWS::IoT::Policy
+    Properties: 
+      PolicyDocument: {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": "iot:*",
+            "Resource": "*"
+          }
+        ]
+      }
+
+  ##############################################################################
 
   CreateThingFunction:
     Type: AWS::Serverless::Function
@@ -310,18 +408,7 @@ Resources:
                 - !Sub "${DeviceTable.Arn}/index/*"
 
 
-  AlexaSkillFunctionPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn: AlexaSkillFunction
-    Properties:
-        Action: lambda:InvokeFunction
-        EventSourceToken: 
-          !FindInMap
-            - Variables
-            - AlexaSkillKit
-            - Id
-        FunctionName: !GetAtt AlexaSkillFunction.Arn
-        Principal: alexa-connectedhome.amazon.com
+  ##############################################################################
 
   DeviceTable:
     Type: AWS::DynamoDB::Table
@@ -344,49 +431,66 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
-  SmartHomeThing:
-    Type: AWS::IoT::Thing
-    Properties: 
-      AttributePayload:
-        Attributes: 
-          modelNumber: 'smartThing-v1'
-          FirmwareVersion: '1.00'
-          SerialNumber: '1234556789'
-  
-  IoTThingPolicy:
-    Type: AWS::IoT::Policy
-    Properties: 
-      PolicyDocument: {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Action": "iot:*",
-            "Resource": "*"
-          }
-        ]
-      }
-
 Outputs:
 
-  IotEndpointAddress:
-    Description: The IoT Endpoint for this particular AWS account. 
-    Value: !GetAtt IotEndpoint.IotEndpointAddress
+  #IotEndpointAddress:
+  #  Description: The IoT Endpoint for this particular AWS account. 
+  #  Value: !GetAtt IotEndpoint.IotEndpointAddress
 
-  SMSRoleExternalId:
-    Description: > 
-      The random UUID generated for the trust policy of the IAM role used by
-      Cognito to send SMS verification messages. 
-    Value: !GetAtt ExternalId.uuid
+  #SMSRoleExternalId:
+  #  Description: > 
+  #    The random UUID generated for the trust policy of the IAM role used by
+  #    Cognito to send SMS verification messages. 
+  #  Value: !GetAtt ExternalId.uuid
 
-  AlexaSkillFunction:
-    Description: "Alexa Skill Lambda Function ARN"
-    Value: !GetAtt AlexaSkillFunction.Arn
+  #AlexaSkillFunction:
+  #  Description: "Alexa Skill Lambda Function ARN"
+  #  Value: !GetAtt AlexaSkillFunction.Arn
 
-  AlexaSkillFunctionIamRole:
-    Description: "Implicit IAM Role created for Alexa Skill function"
-    Value: !GetAtt AlexaSkillFunctionRole.Arn
+  #AlexaSkillFunctionIamRole:
+  #  Description: "Implicit IAM Role created for Alexa Skill function"
+  #  Value: !GetAtt AlexaSkillFunctionRole.Arn
 
   AlexaDefaultEndpoint:
     Description: Used to configure skill in Alexa Developer Console. 
     Value: !GetAtt AlexaSkillFunction.Arn
+
+  AlexaAuthorizationURI:
+    Description: Used to configure Account Linking in Alexa Developer Console.
+    Value: 
+      Fn::Join: 
+        - ''
+        - - !GetAtt CognitoDomain.FullDomain
+          - '/oauth2/authorize?response_type=code&client_id='
+          - !Ref CognitoAlexaAppClient
+          - 'redirect_uri=https://pitangui.amazon.com/api/skill/link/'
+          - !FindInMap [Config, Alexa, VendorId]
+          - '&state=STATE'
+        
+  AlexaAccessTokenURI:
+    Description: Used to configure Account Linking in Alexa Developer Console.
+    Value: 
+      #https://alexa-test.auth.us-east-1.amazoncognito.com
+      Fn::Join: 
+        - ''
+        - - !GetAtt CognitoDomain.FullDomain
+          - '/oauth2/token?state=STATE'
+  
+  AlexaClientId: 
+    Description: Used to configure Account Linking in Alexa Developer Console.
+    Value: !Ref CognitoAlexaAppClient
+
+  AlexaClientSecret:
+    Description: >
+      Used to configure Account Linking in Alexa Developer Console.  
+      Paste this URL in the browser, scroll down, click 'Retrieve secret value',
+      and use the value of the 'clientSecret' when configuring the Alexa skill.  
+    Value: 
+      Fn::Join:
+        - ""
+        - - "https://"
+          - !Ref "AWS::Region"
+          - ".console.aws.amazon.com/secretsmanager/home?region="
+          - !Ref "AWS::Region"
+          - "#/secret?name="
+          - !GetAtt UserPoolClientSecret.SecretName

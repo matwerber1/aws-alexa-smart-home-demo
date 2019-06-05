@@ -1,5 +1,28 @@
 # aws-alexa-smart-home-demo
 
+**Forgive the mess, this is a work in process, far from complete. Not yet ready to deploy!**
+
+The current Alexa skill documentation provides solid Alexa API documentation and
+example Lambda functions with hard-coded JSON input events and responses, but 
+they do not provide a full, 'end-to-end' project. 
+
+The goal of this project is to provide a fast, easy way to deploy an end-to-end
+solution that includes these key features: 
+
+1. Alexa Skill created in the Alexa Developer Console [developer.amazon.com/alexa/console/ask](developer.amazon.com/alexa/console/ask)
+2. Cognito User Pool configured as the identity provider (IdP) for the Alexa skill
+3. An AWS IoT Core "Thing" created in the IoT Registry
+4. DynamoDB table to store a mapping of IoT Things associated to our Cognito users
+5. Lambda linked to our Alexa skill that handles all core Alexa logic, such as: 
+    * Querying DynamoDB to discover devices available to our user
+    * Taking user input from Alexa and updating the IoT Thing's device shadow
+    * Querying device state from IoT thing's device shadow and returning to Alexa
+6. OPTIONAL - Guide to link AWS IoT Thing's device shadow to LEDs on an ESP32 board
+
+This project assumes that you manually associate an IoT Thing to a skill user
+by adding a record to the application's DynamoDB table; a mockup of the user-device
+registration process is not included. 
+
 ## Prerequisites
 
 1. Read/Write access to an existing S3 bucket, to store CloudFormation templates.
@@ -36,32 +59,3 @@
     ```sh
     $ ./deploy.sh
     ```
-
-## AWS IoT
-
-An AWS IoT thing exists as a logical representation of each physical device.
-Each thing's name and other attributes/configuration are below:
-
-| Property | Value| Comments |
-|----------|------|----------|
-| **Thing Name** | deviceType_XXXX | **XXXX** is the device's serial number. | 
-
-## Amazon DynamoDB
-
-Our key application data is stored in a DynamoDB **device table**. The device table has several different data sets (e.g. user-to-device mappings or device type metadata) and different prefixes in the table's **hashId** and **sortId** attributes can be used to identify data set types. 
-
-### Device Type Metadata
-
-Within the **device table**, each device type has a single item that stores device type metadata such as **manufacturerName**. The metadata record is identified by the following **hashId** and **sortId**:
-
-| hashId          | sortId   | Comments                        |
-|-----------------|----------|---------------------------------|
-| **deviceType_XXXX** | **metadata** | **XXXX** is the device type's name. |
-
-### User to Device Association
-
-Within the **device table**, each user has one item for each device that is associated to the user's account. a user may have zero or more devices associated to their account. For each association, the user is identified by the **hashId** and the device is identified by the **sortId**:
-
-| hashId          | sortId   | Comments                        |
-|-----------------|----------|---------------------------------|
-| **userId_XXXX** | **thingName_YYYY** | **XXXX** is the user's subId (i.e. UID) in their Amazon Cognito User Pool and **YYYY** is the device's name which should exactly match the device's thing name in IoT Core. |
