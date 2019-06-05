@@ -1,5 +1,5 @@
 packaged.yaml
-
+node_modules/
 esp32/
 
 # Created by https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode
