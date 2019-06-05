@@ -48,12 +48,31 @@ Resources:
     Type: 'Custom::UserPoolClientSecret'
     Properties:
       ServiceToken: !GetAtt UserPoolClientSecretProvider.Arn
-      UserPoolId:  'us-east-1_RUalF72PN'
-      AppClientId: '7tvp5qug77lulnkbrk16gjtn80'
-      StackName: !Ref AWS::StackName
+      UserPoolId:  'us-east-1_LMdswy7sa'
+      AppClientId: '5rlm9avhfee9carhgod3kgaeod'
 
-#Outputs:
+Outputs:
 
- # UserPoolClientSecretArn:
- #   Description: The app client secret ARN for Alexa. 
- #   Value: !GetAtt UserPoolClientSecret.secretArn
+  UserPoolClientSecretArn:
+    Description: The app client secret ARN for Alexa. 
+    Value: !GetAtt UserPoolClientSecret.SecretArn
+
+  UserPoolClientSecretName:
+    Description: The app client secret name for Alexa. 
+    Value: !GetAtt UserPoolClientSecret.SecretName
+
+  UserPoolAppClientSecretLink:
+    Description: >
+      Paste this URL in the browser to view the AWS Secrets Manager secret
+      containing the value of the Cognito app client secret for Alexa
+      integration. Scroll down, click 'Retrieve secret value', and use the
+      value of the 'clientSecret' key. 
+    Value: 
+      Fn::Join:
+        - ""
+        - - "https://"
+          - !Ref "AWS::Region"
+          - ".console.aws.amazon.com/secretsmanager/home?region="
+          - !Ref "AWS::Region"
+          - "#/secret?name="
+          - !GetAtt UserPoolClientSecret.SecretName

@@ -29,18 +29,6 @@ async function main() {
 
     var responseBodyStringified = JSON.stringify(responseBody);
 
-    /*
-    var options = {
-        method: 'put',
-        url: parsedUrl.path, 
-        headers:  {
-            "content-type": "",
-            "content-length": responseBodyStringified.length,
-            "host": parsedUrl.hostname
-        },
-        data: responseBody
-    };
-    */
     var options = {
         method: 'put',
         headers: {
