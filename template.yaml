@@ -3,26 +3,55 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   aws-alexa-smart-home-demo
 
+Parameters:
+  AlexaSkillId: 
+      NoEcho: true
+      Description: The skill ID of your skill as shown in the Alexa Developer Console (https://developer.amazon.com/alexa/console/ask)
+      Type: String
+      Default: amzn1.ask.skill.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  AlexaVendorId: 
+      NoEcho: true
+      Description: Your Alexa Developer vendor ID (https://developer.amazon.com/settings/console/mycid)
+      Type: String
+      Default: XXXXXXXXXXXXX
+  AlexaCustomerId: 
+      NoEcho: true
+      Description: Your Alexa Developer customer ID (https://developer.amazon.com/settings/console/mycid)
+      Type: String
+      Default: XXXXXXXXXXXXX
+      
 Mappings: 
   Config: 
     Alexa: 
-      SkillId: 'amzn1.ask.skill.1bb2f0b3-c480-43a8-a428-e201ea6b04b3'   # Obtain from https://developer.amazon.com/alexa/console/ask
-      VendorId: 'MGPNN68VCOJJ4'                                         # Obtain from https://developer.amazon.com/settings/console/mycid
-      CustomerId: 'A2JPVXNA7ZPISI'                                      # Obtain from https://developer.amazon.com/settings/console/mycid
+      SkillId: 'amzn1.ask.skill.1bb2f0b3-c480-43a8-a428-e201ea6b04b3'   # Obtain from 
+      VendorId: 'MGPNN68VCOJJ4'                                         # Obtain from 
+      CustomerId: 'A2JPVXNA7ZPISI'                                      # Obtain from 
     Cognito:
       DomainPrefix: 'werberm-smarthome-test'   # If error occurs while Custom:CognitoDomain is created, this prefix may already be in use by someone else. 
 
 Globals:
   Function:
+    Runtime: nodejs10.x
     Timeout: 10
-    Runtime: nodejs8.10
+    MemorySize: 128
     Environment:
       Variables:
         DEVICE_TABLE: !Ref DeviceTable
-        STACK_NAME: !Ref 'AWS::StackName'
+        STACK_NAME: !Ref AWS::StackName
 
 Resources:
-  
+
+  ##############################################################################
+  CloudFormationResponseLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: Contains a sync and async helper function to send responses to CloudFormation for custom resources
+      ContentUri: lambda/layers/cfn-response/
+      CompatibleRuntimes:
+        - nodejs10.x
+        - nodejs8.10
+      LicenseInfo: 'MIT'
+
   ##############################################################################
   IotEndpoint:
     Type: 'Custom::IotEndpoint'
@@ -33,10 +62,9 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
-      Runtime: nodejs10.x
-      CodeUri: lambda/iot-endpoint-provider/
-      MemorySize: 128
-      Timeout: 3
+      CodeUri: lambda/functions/cfProvider-iotEndpoint/
+      Layers:
+        - !Ref CloudFormationResponseLayer
       Policies:
         - Version: '2012-10-17'
           Statement:
@@ -48,21 +76,22 @@ Resources:
 
 
   ##############################################################################
-  UserPoolClientSecret:
-    Type: 'Custom::UserPoolClientSecret'
+  CognitoClientSecret:
+    Type: 'Custom::CognitoClientSecret'
     Properties:
-      ServiceToken: !GetAtt UserPoolClientSecretProvider.Arn
+      ServiceToken: !GetAtt CognitoClientSecretProvider.Arn
       UserPoolId:  !Ref CognitoUserPool
       AppClientId: !Ref CognitoAlexaAppClient
+      ForceDeleteWithoutRecovery: true
 
-  UserPoolClientSecretProvider:
+  CognitoClientSecretProvider:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
-      Runtime: nodejs10.x
-      CodeUri: lambda/user-pool-client-secret-provider/
+      CodeUri: lambda/functions/cfProvider-cognitoClientSecret/
       MemorySize: 128
-      Timeout: 3
+      Layers:
+        - !Ref CloudFormationResponseLayer
       Policies:
         # TODO: Scope down this policy, it is overly permissive
         - Version: '2012-10-17'
@@ -88,19 +117,20 @@ Resources:
 
   ##############################################################################
   
-  ExternalId:
-    Type: 'Custom::ExternalId'
+  CognitoSMSRoleExternalId:
+    Type: 'Custom::Uuid'
     Properties:
       ServiceToken: !GetAtt UuidProvider.Arn
-      
+
   UuidProvider:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
       Runtime: nodejs10.x
-      CodeUri: lambda/uuid-provider/
+      CodeUri: lambda/functions/cfProvider-uuid/
       MemorySize: 128
-      Timeout: 3
+      Layers:
+        - !Ref CloudFormationResponseLayer
 
 
   ##############################################################################
@@ -132,7 +162,7 @@ Resources:
         # policy of the IAM role references by SnsCallerArn. The external ID
         # should be a random ID; to allow for automated deployment, we use a
         # custom CloudFormation resource that generates a V4 UUID:
-        ExternalId: !GetAtt ExternalId.uuid        
+        ExternalId: !GetAtt CognitoSMSRoleExternalId.uuid        
         SnsCallerArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/${CognitoSMSRole}"
   
   # App Client that allows Alexa to interact with our Cognito User Pool:
@@ -143,7 +173,7 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
 
   CognitoClientConfiguration:
-    Type: 'Custom::CognitoCognitoClientConfiguration'
+    Type: 'Custom::CognitoClientConfiguration'
     Properties:
       ServiceToken: !GetAtt CognitoClientConfigurationProvider.Arn
       UserPoolId: !Ref CognitoUserPool
@@ -167,10 +197,10 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
-      Runtime: nodejs10.x
-      CodeUri: lambda/cognito-client-configuration-provider/
+      CodeUri: lambda/functions/cfProvider-cognitoClientConfiguration/
       MemorySize: 128
-      Timeout: 10
+      Layers:
+        - !Ref CloudFormationResponseLayer
       Policies:
         - Version: '2012-10-17'
           Statement:
@@ -191,10 +221,10 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
-      Runtime: nodejs10.x
-      CodeUri: lambda/cognito-user-pool-domain/
+      CodeUri: lambda/functions/cfProvider-cognitoUserPoolDomain/
       MemorySize: 128
-      Timeout: 10
+      Layers:
+        - !Ref CloudFormationResponseLayer
       Policies:
         - Version: '2012-10-17'
           Statement:
@@ -228,7 +258,7 @@ Resources:
                 # The ExternalId below must match the ExternalId we specify
                 # in the Cognito User Pool's SMS configuration; otherwise, the
                 # Cognito User Pool will fail to create:
-                "sts:ExternalId": !GetAtt ExternalId.uuid
+                "sts:ExternalId": !GetAtt CognitoSMSRoleExternalId.uuid
       Path: "/service-role/"
 
   CognitoSMSPolicy: 
@@ -249,7 +279,7 @@ Resources:
   VerifyCognitoTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/verify-cognito-token/
+      CodeUri: lambda/functions/cognito-verifyAuthToken/
       Handler: app.handler
       Environment:
         Variables:
@@ -262,7 +292,7 @@ Resources:
   AlexaSkillFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/alexa-skill/
+      CodeUri: lambda/functions/alexa-skill/
       Handler: app.handler
       Environment:
         Variables:
@@ -326,7 +356,7 @@ Resources:
   CreateThingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/create-device-thing/
+      CodeUri: lambda/functions/iot-createThing/
       Handler: app.handler
       Policies:
         - Statement:
@@ -342,7 +372,7 @@ Resources:
   AssociateThingToUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/associate-device-to-user/
+      CodeUri: lambda/functions/ddb-associateThingToUser/
       Handler: app.handler
       Policies:
         - Statement:
@@ -366,7 +396,7 @@ Resources:
   CreateDeviceTypeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/create-device-type/
+      CodeUri: lambda/functions/ddb-createThingType/
       Handler: app.handler
       Policies:
         - Statement:
@@ -390,7 +420,7 @@ Resources:
   GetDevicesByUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/get-devices-by-user/
+      CodeUri: lambda/functions/ddb-getUserThings/
       Handler: app.handler
       Policies:
         - Statement:
@@ -433,23 +463,15 @@ Resources:
 
 Outputs:
 
-  #IotEndpointAddress:
-  #  Description: The IoT Endpoint for this particular AWS account. 
-  #  Value: !GetAtt IotEndpoint.IotEndpointAddress
+  IotEndpointAddress:
+    Description: The IoT Endpoint for this particular AWS account. 
+    Value: !GetAtt IotEndpoint.IotEndpointAddress
 
-  #SMSRoleExternalId:
-  #  Description: > 
-  #    The random UUID generated for the trust policy of the IAM role used by
-  #    Cognito to send SMS verification messages. 
-  #  Value: !GetAtt ExternalId.uuid
-
-  #AlexaSkillFunction:
-  #  Description: "Alexa Skill Lambda Function ARN"
-  #  Value: !GetAtt AlexaSkillFunction.Arn
-
-  #AlexaSkillFunctionIamRole:
-  #  Description: "Implicit IAM Role created for Alexa Skill function"
-  #  Value: !GetAtt AlexaSkillFunctionRole.Arn
+  CognitoSMSRoleExternalId:
+    Description: > 
+      The random UUID generated for the trust policy of the IAM role used by
+      Cognito to send SMS verification messages. 
+    Value: !GetAtt CognitoSMSRoleExternalId.uuid
 
   AlexaDefaultEndpoint:
     Description: Used to configure skill in Alexa Developer Console. 
@@ -493,4 +515,4 @@ Outputs:
           - ".console.aws.amazon.com/secretsmanager/home?region="
           - !Ref "AWS::Region"
           - "#/secret?name="
-          - !GetAtt UserPoolClientSecret.SecretName
+          - !GetAtt CognitoClientSecret.SecretName

@@ -1,7 +1,9 @@
 // Adapted from https://github.com/rosberglinhares/CloudFormationCognitoCustomResources/blob/master/CloudFormationCognitoUserPoolClientSettings.js
 const AWS = require('aws-sdk');
+const axios = require('axios');
+const debug = false;
 
-exports.handler = async (event, context, callback) => {
+exports.handler = async function (event, context, callback) {
 
     console.log("REQUEST RECEIVED:\n" + JSON.stringify(event));
     let responseData, responseStatus;
@@ -24,11 +26,14 @@ exports.handler = async (event, context, callback) => {
                     AllowedOAuthFlows: event.ResourceProperties.AllowedOAuthFlows,
                     AllowedOAuthScopes: event.ResourceProperties.AllowedOAuthScopes
                 }).promise();
-                
+                responseData = {
+                    UserPoolId: event.ResourceProperties.UserPoolId,
+                    ClientId: event.ResourceProperties.UserPoolClientId
+                };
                 break;
                 
             case 'Delete':
-                await sendResponse(event, context, callback, 'SUCCESS');
+                // IS THERE ANYTHING TO DELETE???
                 break;
         }
         
@@ -38,7 +43,7 @@ exports.handler = async (event, context, callback) => {
         responseStatus = "FAILED";
     }
 
-    await sendResponse(event, context, callback, responseStatus);
+    await sendResponse(event, context, callback, responseStatus, responseData);
 
 }
 
@@ -52,8 +57,7 @@ async function sendResponse(event, context, callback, responseStatus, responseDa
         StackId: event.StackId,
         RequestId: event.RequestId,
         LogicalResourceId: event.LogicalResourceId,
-        PhysicalResourceId: event.LogicalResourceId,
-        Data: responseData
+        PhysicalResourceId: event.LogicalResourceId
     });
 
     console.log("RESPONSE BODY:\n", responseBody);

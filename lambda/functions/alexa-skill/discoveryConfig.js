@@ -11,15 +11,13 @@ attributes of the same name.
 const discoveryConfig = {
     'smartThing-v1': {
         '1.00': {
-            endpoints: {
-                manufacturerName: 'SmartHome Products, Inc.',
-                modelName: 'Model 001',
-                friendlyName: 'Smart Device',
-                description: 'My SmartHome Product!',
-                displayCategories: [
-                    - 'OTHER'
-                ]
-            },
+            manufacturerName: 'SmartHome Products, Inc.',
+            modelName: 'Model 001',
+            friendlyName: 'Smart Device',
+            description: 'My SmartHome Product!',
+            displayCategories: [
+                - 'OTHER'
+            ],
             capabilities: [
                 {
                     // Basic capability that should be included for all

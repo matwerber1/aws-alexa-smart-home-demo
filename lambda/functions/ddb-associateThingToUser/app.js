@@ -31,8 +31,7 @@ async function associateDeviceToUser(event) {
             hashId: hashId,
             sortId: sortId,
             userId: event.userId,
-            thingName: event.thingName,
-            thingType: event.thingType
+            thingName: event.thingName
         }, 
         ReturnConsumedCapacity: "TOTAL", 
         TableName: deviceTableName

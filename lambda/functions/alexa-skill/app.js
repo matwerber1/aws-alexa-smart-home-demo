@@ -7,6 +7,7 @@ const IOT_ENDPOINT = process.env.IOT_ENDPOINT;
 const AlexaResponse = require("./AlexaResponse");
 const discoveryConfig = require ("./discoveryConfig");
 const iotdata = new AWS.IotData({ endpoint: IOT_ENDPOINT });
+const iot = new AWS.Iot();
 const lambda = new AWS.Lambda();
 
 // Set to true when debugging with a hard-coded user ID / token for testing.
@@ -134,11 +135,8 @@ async function handleDiscovery(request, context) {
         var authToken = JSON.parse(authTokenValidationResponse.Payload);
         var userId = authToken.sub;
 
-        var userDevices = await getUserDevices(userId);
-        log("DEBUG: ", "User devices:\n", JSON.stringify(userDevices));
-        
-        var endpoints = convertUserDevicesToEndpoints(userDevices);
-        log("DEBUG: ", "Endpoints:\n", JSON.stringify(endpoints));
+        var endpoints = await getUserEndpoints(userId);
+        log("DEBUG: ", "User endpoints:\n", JSON.stringify(endpoints));
         
         endpoints.forEach(endpoint => {
             alexaResponse.addPayloadEndpoint(endpoint);
@@ -156,6 +154,7 @@ associated to our user. This function selects the subset of properties from that
 that list that are required by Alexa and pushes it into a new "endpoints" list
 that becomes part of our final handleDiscovery response. 
 */
+// DEPRECATED
 function convertUserDevicesToEndpoints(userDevices) {
     var endpoints = [];
     for (var index in userDevices) {
@@ -212,7 +211,8 @@ This function takes a user ID obtained from the validated and not-expired auth
 token provided by Alexa in the function request and invokes another function
 that returns a list of all devices associated to that user. 
 */
-async function getUserDevices(userId) {
+async function getUserEndpoints(userId) {
+//async function getUserDevices(userId) {
     
     var payload = JSON.stringify({
         userId: userId
@@ -225,8 +225,34 @@ async function getUserDevices(userId) {
     };
 
     getUserDevicesResponse = await lambda.invoke(params).promise();
-    var payload = JSON.parse(getUserDevicesResponse.Payload);
-    return payload.deviceList;
+    var devices = (JSON.parse(getUserDevicesResponse.Payload)).deviceList;
+    /*
+        response will contain: {
+            thingName: "xxxx",
+            userId: "yyyy"
+        }
+    */
+
+    let endpoints = [];
+
+    devices.forEach(device => { 
+        let iotDescription = await iot.describeThing({ thingName: device.thingName }).promise();
+
+        thingConfig = discoveryConfig[iotDescription.modelNumber][iotDescription.firmwareVersion];
+
+        let endpoint = {
+            endpointId: device.thingName,
+            manufacturerName: thingConfig.manufacturerName,
+            friendlyName: thingConfig.friendlyName,
+            description: thingConfig.description,
+            displayCategories: thingConfig.displayCategories,
+            capabilities: thingConfig.capabilities,
+        };
+
+        endpoints.push(endpoint);
+    });
+
+    return endpoints;
 }
 
 /*

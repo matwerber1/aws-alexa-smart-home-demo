@@ -1,0 +1,20 @@
+CognitoClientConfiguration:
+    Type: 'Custom::CognitoClientConfiguration'
+    Properties:
+      ServiceToken: !GetAtt CognitoClientConfigurationProvider.Arn
+      UserPoolId: !Ref CognitoUserPool
+      UserPoolClientId: !Ref CognitoAlexaAppClient
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURL:
+          Fn::Join:
+            - ""
+            - - "https://pitangui.amazon.com/api/skill/link/"
+              - !FindInMap [Config, Alexa, VendorId]  
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - openid
+        - phone
