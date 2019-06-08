@@ -9,6 +9,8 @@ Copyright 2017-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  License for the specific language governing permissions and limitations under the License.
 */
 
+// Idea for async version? https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/
+
 var https = require('https');
 var jose = require('node-jose');
 

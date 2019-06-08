@@ -1,84 +1,48 @@
-// Adapted from https://github.com/rosberglinhares/CloudFormationCognitoCustomResources/blob/master/CloudFormationCognitoUserPoolClientSettings.js
-const AWS = require('aws-sdk');
-const axios = require('axios');
-const debug = false;
+const aws = require("aws-sdk");
+const cognitoIdentityServiceProvider = new aws.CognitoIdentityServiceProvider();
+const cfnResponse = require('cfn-response-async');
 
-exports.handler = async function (event, context, callback) {
+/*
+  This function acts as a custom CloudFormation resource and therefore must
+  handle one of three request types: Create, Update, or Delete. 
+*/
+exports.handler = async (event, context) => {
 
     console.log("REQUEST RECEIVED:\n" + JSON.stringify(event));
-    let responseData, responseStatus;
+
+    let responseData; 
 
     try {
-        responseStatus = "SUCCESS";
+        if (event.RequestType === 'Create' || event.RequestType === 'Update') {
+            
+            await cognitoIdentityServiceProvider.updateUserPoolClient({
+                UserPoolId: event.ResourceProperties.UserPoolId,
+                ClientId: event.ResourceProperties.UserPoolClientId,
+                SupportedIdentityProviders: event.ResourceProperties.SupportedIdentityProviders,
+                CallbackURLs: [event.ResourceProperties.CallbackURL],
+                LogoutURLs: [event.ResourceProperties.LogoutURL],
+                AllowedOAuthFlowsUserPoolClient: (event.ResourceProperties.AllowedOAuthFlowsUserPoolClient == 'true'),
+                AllowedOAuthFlows: event.ResourceProperties.AllowedOAuthFlows,
+                AllowedOAuthScopes: event.ResourceProperties.AllowedOAuthScopes
+            }).promise();
 
-        switch (event.RequestType) {
-            case 'Create':
-            case 'Update':
-                var cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
-                
-                await cognitoIdentityServiceProvider.updateUserPoolClient({
-                    UserPoolId: event.ResourceProperties.UserPoolId,
-                    ClientId: event.ResourceProperties.UserPoolClientId,
-                    SupportedIdentityProviders: event.ResourceProperties.SupportedIdentityProviders,
-                    CallbackURLs: [event.ResourceProperties.CallbackURL],
-                    LogoutURLs: [event.ResourceProperties.LogoutURL],
-                    AllowedOAuthFlowsUserPoolClient: (event.ResourceProperties.AllowedOAuthFlowsUserPoolClient == 'true'),
-                    AllowedOAuthFlows: event.ResourceProperties.AllowedOAuthFlows,
-                    AllowedOAuthScopes: event.ResourceProperties.AllowedOAuthScopes
-                }).promise();
-                responseData = {
-                    UserPoolId: event.ResourceProperties.UserPoolId,
-                    ClientId: event.ResourceProperties.UserPoolClientId
-                };
-                break;
-                
-            case 'Delete':
-                // IS THERE ANYTHING TO DELETE???
-                break;
+            responseData = {
+                UserPoolId: event.ResourceProperties.UserPoolId,
+                ClientId: event.ResourceProperties.UserPoolClientId
+            };
+
+            let physicalResourceId = event.LogicalResourceId;
+
+            return await cfnResponse.send(event, context, "SUCCESS", responseData, physicalResourceId);
         }
-        
-        console.info(`CognitoUserPoolClientSettings Success for request type ${event.RequestType}`);
-    } catch (error) {
-        console.error(`CognitoUserPoolClientSettings Error for request type ${event.RequestType}:`, error);
-        responseStatus = "FAILED";
+        else if (event.RequestType === 'Delete') {
+            // For now, we don't actually delete anything... but maybe we should reset values to default???
+            return await cfnResponse.send(event, context, "SUCCESS");
+        }
     }
-
-    await sendResponse(event, context, callback, responseStatus, responseData);
-
-}
-
-
-async function sendResponse(event, context, callback, responseStatus, responseData) {
-
-    var signedUrl = event.ResponseURL;
-    var responseBody = JSON.stringify({
-        Status: responseStatus,
-        Reason: "See the details in CloudWatch Log Stream: " + context.logStreamName,
-        StackId: event.StackId,
-        RequestId: event.RequestId,
-        LogicalResourceId: event.LogicalResourceId,
-        PhysicalResourceId: event.LogicalResourceId
-    });
-
-    console.log("RESPONSE BODY:\n", responseBody);
-    
-    var options = {
-        method: 'put',
-        headers:  {
-            "content-type": "",
-            "content-length": responseBody.length
-        },
-        data: responseBody
-    };
-
-    if (debug === true) {
-        console.log('Debug=true; skipping post of results to signed S3 URL...');
-    } else {
-        console.log('Posting response to S3 signed URL...');
-        response = await axios(signedUrl, options);
-        console.log("STATUS: " + response.status);
-        console.log("HEADERS: " + JSON.stringify(response.headers, null, 2));
+    catch (err) {
+        responseData = { Error: err };
+        console.log(err);
+        return await cfnResponse.send(event, context, "FAILED", responseData);
     }
-    callback(null);
-
 }

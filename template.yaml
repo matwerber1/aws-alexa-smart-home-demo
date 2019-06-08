@@ -26,8 +26,6 @@ Mappings:
       SkillId: 'amzn1.ask.skill.1bb2f0b3-c480-43a8-a428-e201ea6b04b3'   # Obtain from 
       VendorId: 'MGPNN68VCOJJ4'                                         # Obtain from 
       CustomerId: 'A2JPVXNA7ZPISI'                                      # Obtain from 
-    Cognito:
-      DomainPrefix: 'werberm-smarthome-test'   # If error occurs while Custom:CognitoDomain is created, this prefix may already be in use by someone else. 
 
 Globals:
   Function:
@@ -213,7 +211,7 @@ Resources:
     Type: 'Custom::CognitoUserPoolDomain'
     Properties:
       ServiceToken: !GetAtt CognitoDomainProvider.Arn
-      DomainPrefix: !FindInMap [Config, Cognito, DomainPrefix]
+      DomainPrefix: !Sub "${AWS::AccountId}-smart-home-demo-domain"
       UserPoolId: !Ref CognitoUserPool
       ClientId: !Sub CognitoAlexaAppClient
 
@@ -280,7 +278,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/functions/cognito-verifyAuthToken/
-      Handler: app.handler
+      Handler: index.handler
       Environment:
         Variables:
           USER_POOL_ID: !Ref CognitoUserPool
@@ -293,7 +291,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/functions/alexa-skill/
-      Handler: app.handler
+      Handler: index.handler
       Environment:
         Variables:
           GET_DEVICES_BY_USER_FUNCTION: !Ref GetDevicesByUserFunction
@@ -357,7 +355,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/functions/iot-createThing/
-      Handler: app.handler
+      Handler: index.handler
       Policies:
         - Statement:
           - 
@@ -373,7 +371,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/functions/ddb-associateThingToUser/
-      Handler: app.handler
+      Handler: index.handler
       Policies:
         - Statement:
           - 
@@ -397,7 +395,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/functions/ddb-createThingType/
-      Handler: app.handler
+      Handler: index.handler
       Policies:
         - Statement:
           - 
@@ -421,7 +419,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/functions/ddb-getUserThings/
-      Handler: app.handler
+      Handler: index.handler
       Policies:
         - Statement:
             - 

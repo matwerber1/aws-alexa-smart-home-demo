@@ -14,7 +14,7 @@ exports.handler = async (event) => {
 
         if (thingExistsResponse.doesExist) {
             thing.version = thingExistsResponse.version;
-            var updateThingResponse = await updateThing(thing);
+            await updateThing(thing);
             const response = {
                 statusCode: 200,
                 message: 'Existing thing updated.'

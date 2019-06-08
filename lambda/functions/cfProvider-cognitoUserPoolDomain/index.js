@@ -73,7 +73,7 @@ exports.handler = async function (event, context) {
             await deleteUserPoolDomain(event.ResourceProperties.DomainPrefix);
             return await cfnResponse.send(event, context, "SUCCESS");
         }
-    } catch (error) {
+    } catch (err) {
         responseData = { Error: err };
         console.log(err);
         return await cfnResponse.send(event, context, "FAILED", responseData);
