@@ -211,7 +211,7 @@ Resources:
     Type: 'Custom::CognitoUserPoolDomain'
     Properties:
       ServiceToken: !GetAtt CognitoDomainProvider.Arn
-      DomainPrefix: !Sub "${AWS::AccountId}-smart-home-demo-domain"
+      DomainPrefix: !Sub "${AWS::AccountId}-${AWS::StackName}-domain"   # Note - stack name cannot contain 'aws' or creation will fail
       UserPoolId: !Ref CognitoUserPool
       ClientId: !Sub CognitoAlexaAppClient
 
@@ -332,8 +332,8 @@ Resources:
       AttributePayload:
         Attributes: 
           modelNumber: 'smartThing-v1'
-          FirmwareVersion: '1.00'
-          SerialNumber: '1234556789'
+          firmwareVersion: '1.00'
+          serialNumber: '1234556789'
   
   IoTThingPolicy:
     Type: AWS::IoT::Policy

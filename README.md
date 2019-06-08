@@ -27,6 +27,15 @@ registration process is not included.
 
 ## Prerequisites
 
+1. AWS Account
+2. IAM user access with admin privileges
+3. S3 Bucket to store project files
+
+
+### OPTIONAL - Hardware
+
+This project includes an optional hardware setup that includes an ESP32 chip with LEDs and a temp/humidity sensor. Though not required, you may link this device to your AWS IoT and Alexa backend for a more realistic Smart Home experience. 
+
 1. Read/Write access to an existing S3 bucket, to store CloudFormation templates.
 2. ESP32 
 3. breadboard and jumper wires
@@ -38,7 +47,13 @@ registration process is not included.
 
 ## Getting Started
 
-1. Register (or sign-in) to the [Alexa Developer Console](https://developer.amazon.com/).
+1. Register a developer account with the [Alexa Developer Console](https://developer.amazon.com/).
+
+2. Install and initialize the Alexa CLI, following **steps 1 to 3** in the [Alexa CLI quick start documentation](https://developer.amazon.com/docs/smapi/quick-start-alexa-skills-kit-command-line-interface.html).
+
+    * **Note:** When you run `ask init` on step 3, choose **No** when asked **"do you want to host your skill's backend code in AWS Lambda?"**. Choosing 'yes' is needed if you want the Alexa service to host your Lambda functions... however, this special hosting option is not available for the Smart Home skills kit. We will instead be hosting Lambda functions (and other AWS resources) in *your* AWS account, which is why we can say "no" to the ASK CLI.
+
+3. (Install the SAM CLI)[https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html]
 
 2. Navigate to the [Alexa Skills Kit (ASK) Dashboard](https://developer.amazon.com/alexa/console/ask) and click **Create Skill**.
 

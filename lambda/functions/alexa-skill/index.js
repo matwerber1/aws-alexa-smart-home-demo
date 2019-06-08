@@ -14,83 +14,85 @@ const lambda = new AWS.Lambda();
 const debugMode = false;
 
 
-exports.handler = async function (request, context, callback) {
+exports.handler = async function (request, context) {
 
-    log("DEBUG: ", "Alexa request:\n", JSON.stringify(request, null, 2));
-    
-    if (context !== undefined) {
+    try {
+        log("DEBUG: ", "Alexa request:\n", JSON.stringify(request, null, 2));
         log("DEBUG: ", "Alexa context:\n", JSON.stringify(context,null, 2));
-    }
-
-    if (!('directive' in request)) {
- 
-        log("ERROR: ", `Request is missing 'directive' key.`);
- 
-        let alexaErrorResponse = new AlexaResponse(
-            {
-                "name": "ErrorResponse",
-                "payload": {
-                    "type": "INVALID_DIRECTIVE",
-                    "message": "Missing key: directive, Is request a valid Alexa directive?"
-                }
-            }
-        );
         
-        return sendResponse(alexaErrorResponse.get());
-    }
+        if (!('directive' in request)) {
 
-    if (request.directive.header.payloadVersion !== "3") {
+            log("ERROR: ", `Request is missing 'directive' key.`);
     
-        log("ERROR: ", `Request's payload version is `
-            + `${request.directive.header.payloadVersion} but this function `
-            + `requires version 3.`
-        );
+            let alexaErrorResponse = new AlexaResponse(
+                {
+                    "name": "ErrorResponse",
+                    "payload": {
+                        "type": "INVALID_DIRECTIVE",
+                        "message": "Missing key: directive, Is request a valid Alexa directive?"
+                    }
+                }
+            );
+            
+            return sendResponse(alexaErrorResponse.get());
+        }
     
-        let alexaErrorResponse = new AlexaResponse(
-            {
-                "name": "ErrorResponse",
-                "payload": {
-                    "type": "INTERNAL_ERROR",
-                    "message": "This skill only supports Smart Home API version 3"
-                }
-            }
-        );
+        if (request.directive.header.payloadVersion !== "3") {
         
-        return sendResponse(alexaErrorResponse.get())
-    }
-
-    let namespace = ((request.directive || {}).header || {}).namespace;
-
-    if (namespace.toLowerCase() === 'alexa.discovery') {
-
-        log("DEBUG: ", "Calling handleDiscovery()...");
-        let alexaResponse = await handleDiscovery(request, context, "");
-        return sendResponse(alexaResponse.get());
-
-    }
-    else if (namespace.toLowerCase() === 'alexa.thermostatcontroller') {
- 
-        log("DEBUG: ", "Calling handleThermostatControl()...");
-        let alexaResponse = await handleThermostatControl(request, context, "");
-        return sendResponse(alexaResponse.get());
- 
-    }
-    else {
- 
-        log("ERROR: ", `${namespace} is an unsupported Alexa namespace.`);
- 
-        let alexaErrorResponse = new AlexaResponse(
-            {
-                "name": "ErrorResponse",
-                "payload": {
-                    "type": "INVALID_DIRECTIVE",
-                    "message": `Unsupported directive ${request.directive}.`
-                }
-            }
-        );
+            log("ERROR: ", `Request's payload version is `
+                + `${request.directive.header.payloadVersion} but this function `
+                + `requires version 3.`
+            );
         
-        return sendResponse(alexaErrorResponse.get())
+            let alexaErrorResponse = new AlexaResponse(
+                {
+                    "name": "ErrorResponse",
+                    "payload": {
+                        "type": "INTERNAL_ERROR",
+                        "message": "This skill only supports Smart Home API version 3"
+                    }
+                }
+            );
+            
+            return sendResponse(alexaErrorResponse.get())
+        }
+    
+        let namespace = ((request.directive || {}).header || {}).namespace;
+    
+        if (namespace.toLowerCase() === 'alexa.discovery') {
+    
+            log("DEBUG: ", "Calling handleDiscovery()...");
+            let response = await handleDiscovery(request, context);
+            return sendResponse(response.get());
+    
+        }
+        else if (namespace.toLowerCase() === 'alexa.thermostatcontroller') {
+    
+            log("DEBUG: ", "Calling handleThermostatControl()...");
+            let response = await handleThermostatControl(request, context);
+            return sendResponse(response.get());
+    
+        }
+        else {
+    
+            log("ERROR: ", `${namespace} is an unsupported Alexa namespace.`);
+    
+            let alexaErrorResponse = new AlexaResponse(
+                {
+                    "name": "ErrorResponse",
+                    "payload": {
+                        "type": "INVALID_DIRECTIVE",
+                        "message": `Unsupported directive ${request.directive}.`
+                    }
+                }
+            );
 
+            return sendResponse(alexaErrorResponse.get())
+        }
+    }
+    catch (err) {
+        console.log('ERROR:\n' + err);
+        throw ({ Error: err });
     }
 
 };
@@ -110,12 +112,10 @@ endpoints exist, we must return an empty list.
 */
 async function handleDiscovery(request, context) {
 
-    let alexaResponse = new AlexaResponse(
-        {
-            "namespace": "Alexa.Discovery",
-            "name": "Discover.Response"
-        }
-    );
+    let alexaResponse = new AlexaResponse({
+        "namespace": "Alexa.Discovery",
+        "name": "Discover.Response"
+    });
 
     var authTokenValidationResponse = await getAuthTokenValidationResponse(
         request.directive.payload.scope.token
@@ -131,13 +131,15 @@ async function handleDiscovery(request, context) {
     
     }
     else {
-        
+        log("DEBUG: ", "Auth token is valid.");
         var authToken = JSON.parse(authTokenValidationResponse.Payload);
         var userId = authToken.sub;
 
+        log("DEBUG: ", "Getting user endpoints...");
         var endpoints = await getUserEndpoints(userId);
         log("DEBUG: ", "User endpoints:\n", JSON.stringify(endpoints));
         
+        log("DEBUG: ", "Adding endpoints to payload response...");
         endpoints.forEach(endpoint => {
             alexaResponse.addPayloadEndpoint(endpoint);
         });
@@ -201,7 +203,7 @@ async function getAuthTokenValidationResponse(token) {
         Payload: payload
     };
 
-    response = await lambda.invoke(params).promise();
+    let response = await lambda.invoke(params).promise();
     return response;
 
 }
@@ -224,8 +226,12 @@ async function getUserEndpoints(userId) {
         Payload: payload
     };
 
-    getUserDevicesResponse = await lambda.invoke(params).promise();
+    log("DEBUG: ", "Invoking Lambda: ", params);
+    let getUserDevicesResponse = await lambda.invoke(params).promise();
+
+    log("DEBUG: ", "User Device Lambda response: ", getUserDevicesResponse);
     var devices = (JSON.parse(getUserDevicesResponse.Payload)).deviceList;
+    log("DEBUG: ", "Devices: ", devices);
     /*
         response will contain: {
             thingName: "xxxx",
@@ -235,10 +241,15 @@ async function getUserEndpoints(userId) {
 
     let endpoints = [];
 
-    devices.forEach(device => { 
-        let iotDescription = await iot.describeThing({ thingName: device.thingName }).promise();
+    for (const device of devices) {
+        let params = {
+            thingName: device.thingName
+        };
 
-        thingConfig = discoveryConfig[iotDescription.modelNumber][iotDescription.firmwareVersion];
+        log("DEBUG: ", "Calling IoT.describeThing() with params: ", params);
+        let iotDescription = await iot.describeThing(params).promise();
+        log("DEBUG: ", "IoT Description:\n", iotDescription);
+        let thingConfig = discoveryConfig[iotDescription.attributes.modelNumber][iotDescription.attributes.firmwareVersion];
 
         let endpoint = {
             endpointId: device.thingName,
@@ -250,7 +261,7 @@ async function getUserEndpoints(userId) {
         };
 
         endpoints.push(endpoint);
-    });
+    }
 
     return endpoints;
 }
@@ -262,18 +273,18 @@ function log(message, message1, message2) {
     if (message2 == null) {
         console.log(message + message1);
     } else {
-        console.log(message + message1 + message2);
+        console.log(message + message1 + JSON.stringify(message2, null, 2));
     }
 }
 
 /*
 This function handles all requests that Alexa identifies as being a 
 "ThermostatController" directive, such as:
- - Turn device to cool mode
- - Turn device to heat mode
- - Increase device temperature
- - Decrease device temperature
- - Set temperature to X degrees
+- Turn device to cool mode
+- Turn device to heat mode
+- Increase device temperature
+- Decrease device temperature
+- Set temperature to X degrees
 
 */
 async function handleThermostatControl(request, context) {
@@ -283,19 +294,20 @@ async function handleThermostatControl(request, context) {
     let correlationToken = request.directive.header.correlationToken;
     let requestMethod = request.directive.header.name; 
 
+    let alexaResponse = new AlexaResponse(
+        {
+            "correlationToken": correlationToken,
+            "token": token,
+            "endpointId": endpoint_id
+        }
+    );
 
     var authTokenValidationResponse = await getAuthTokenValidationResponse(
         request.directive.endpoint.scope.token
     );
 
     if (authTokenValidationResponse.hasOwnProperty('FunctionError')) {
-
-        log("ERROR: ", "Authentication error:\n",
-            JSON.stringify(authTokenValidationResponse, null, 2)
-        );
-
-        alexaResponse.setEndpointsToEmptyArrayDueToDiscoveryError();
-
+        log("ERROR: ", "Authentication error:\n", authTokenValidationResponse);
     } 
     else {
 
@@ -315,7 +327,7 @@ async function handleThermostatControl(request, context) {
             
             // TODO - update the device shadow's desired state
 
-            targetpointContextProperty = {
+            let targetpointContextProperty = {
                 namespace: "Alexa.ThermostatController",
                 name: "targetSetpoint",
                 value: {
@@ -342,12 +354,13 @@ async function handleThermostatControl(request, context) {
                 payload: JSON.stringify(shadowState) /* Strings will be Base-64 encoded on your behalf */, /* required */
                 thingName: endpointId /* required */
             };
-            log("DEBUG: ", `Updating shadow of ${endpointId}:\n`, JSON.stringify(shadowState,null,2));
+            log("DEBUG: ", `Updating shadow of ${endpointId}:\n`, shadowState);
             var updateShadowResponse = await iotdata.updateThingShadow(params).promise();
-            log("DEBUG: ", `Update shadow response:\n`, JSON.stringify(updateShadowResponse,null,2));
+            log("DEBUG: ", `Update shadow response:\n`, updateShadowResponse);
             
 
-            targetpointContextProperty = {
+
+            let targetpointContextProperty = {
                 namespace: "Alexa.ThermostatController",
                 name: "thermostatMode",
                 value: request.directive.payload.thermostatMode.value
@@ -373,6 +386,6 @@ async function handleThermostatControl(request, context) {
 
 function sendResponse(response)
 {
-    log("DEBUG: ", "Lambda response:\n", JSON.stringify(response, null, 2));
+    log("DEBUG: ", "Lambda response:\n", response);
     return response
 }
