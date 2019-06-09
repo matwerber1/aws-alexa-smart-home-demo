@@ -68,7 +68,7 @@ In addition to the core components above, a number of helper resources will be c
 
 7. Install the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html). The SAM CLI is provides several tools that make serverless app development on AWS easy, including the ability to locally test AWS Lambda functions. The specific functionality we will use is SAM's ability to translate and deploy short-hand SAM YAML templates into full-fledged CloudFormation templates. 
 
-8. Add script or instructions for installing Node dependencies via npm in local folders before running the deploy.sh script. Without this step, the Lambda(s) that require external dependencies with fail when invoked with a "module not found" error on the `const some_package = require('package_name')` command. 
+8. **TODO:** Add script or instructions for installing Node dependencies via npm in local folders before running the deploy.sh script. Without this step, the Lambda(s) that require external dependencies with fail when invoked with a "module not found" error on the `const some_package = require('package_name')` command. 
 
 9. Edit **deploy.sh** and set the BUCKET variable to the name of an S3 bucket to use for storing later CloudFormation templates. It's recommend that you leave the **STACK_NAME=** parameter set to **alexa-smart-home-demo** as we will reference this stack name in later steps. 
 
