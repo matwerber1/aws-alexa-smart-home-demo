@@ -4,7 +4,7 @@ Some components are not yet functional and/or in early draft stage.
 
 # aws-alexa-smart-home-demo
 
-Many of the existing Alexa Smart Home skill examples focus only on the Alexa skill's Lambda function and typically give hard-coded examples of typical JSON requests and responses. 
+Many of the existing Alexa Smart Home skill examples focus only on the Alexa skill's Lambda function and typically give hard-coded examples of JSON requests and responses between the AWS-managed Alexa service and your customer-managed Lambda function that acts as the 'brains' of your Alexa skill. 
 
 This project aims to quickly give you a more realistic, end-to-end smart home skill example with the following core components: 
 
