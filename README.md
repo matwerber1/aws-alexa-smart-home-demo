@@ -8,7 +8,7 @@ Many of the existing Alexa Smart Home skill examples focus only on the Alexa ski
 
 This project aims to quickly give you a more realistic, end-to-end smart home skill example with the following core components: 
 
-1. Real (developer user) sign-up via an Alexa-enabled smart speaker (e.g. an [Echo Dot](https://www.amazon.com/All-new-Echo-Dot-3rd-Gen/dp/B0792KTHKJ)), [Alexa web app](https://alexa.amazon.com), Alexa mobile app ( [Android](https://play.google.com/store/apps/details?id=com.amazon.dee.app&hl=en_US), [iOS](https://itunes.apple.com/us/app/amazon-alexa/id944011620?mt=8)), or the test tool from the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask/). 
+1. Real (developer user) sign-up via an Alexa-enabled smart speaker (e.g. an [Echo Dot](https://www.amazon.com/All-new-Echo-Dot-3rd-Gen/dp/B0792KTHKJ)), [Alexa web app](https://alexa.amazon.com), Alexa mobile app ([Android](https://play.google.com/store/apps/details?id=com.amazon.dee.app&hl=en_US), [iOS](https://itunes.apple.com/us/app/amazon-alexa/id944011620?mt=8)), or the test tool from the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask/). 
 
 2. [An AWS IoT Core "Thing"](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) that is a logical cloud representation of a physical smart home device. Your Alexa skill will send commands to or read device state from the IoT Thing. Your physical device will receive commands from or send device state updates to the IoT Thing. While an AWS IoT Core "thing" is not required, it greatly simplifies the interaction between the physical world and your backend services. In a production scenario, each physical device would be mapped to a unique IoT thing. 
 
@@ -66,20 +66,48 @@ In addition to the core components above, a number of helper resources will be c
     7. Accept the default value **Disable automatic rotation** and click **Next**.
     8. On the final review page, click **Store** to save your secret. 
 
-2. 
+7. Install the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html). The SAM CLI is provides several tools that make serverless app development on AWS easy, including the ability to locally test AWS Lambda functions. The specific functionality we will use is SAM's ability to translate and deploy short-hand SAM YAML templates into full-fledged CloudFormation templates. 
 
-3. (Install the SAM CLI)[https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html]. We use this CLI in our deployment script to create and launch a CloudFormation script containing the bulk of your needed resources. 
-
-
-4. Edit **deploy.sh** and set the BUCKET variable to the name of an S3 bucket to use for storing later CloudFormation templates. 
+8. Edit **deploy.sh** and set the BUCKET variable to the name of an S3 bucket to use for storing later CloudFormation templates. It's recommend that you leave the **STACK_NAME=** parameter set to **alexa-smart-home-demo** as we will reference this stack name in later steps. 
 
     ```sh
     # deploy.sh
     BUCKET=your_bucket_name
     ```
 
-5. Build and deploy the CloudFormation template by running deploy.sh from the project root:
+9. Build and deploy the CloudFormation template by running deploy.sh from the project root:
 
     ```sh
     $ ./deploy.sh
     ```
+
+10. Monitor the status of your stack from the [CloudFormation console](https://console.aws.amazon.com/cloudformation/) and wait for the status to show as **CREATE_COMPLETE**. 
+
+11. From the CloudFormation console, click the **alexa-smart-home-demo** stack and then click the **Outputs** section. Here, you will see a number of values that we will plug in to your skill's configuration in the Alexa Developer Console to complete our skill setup. 
+
+12. While keeping the CloudFormation console open, open the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask/), click **Edit** next to the skill you created previously, and copy-paste (or enter) the following values:
+
+    1. Click the **Smart Home** tab of the Alexa skill console, and: 
+
+        1. Copy the value of the **AlexaDefaultEndpoint** output from CloudFormation into the **Default endpoint** box of the Alexa configuration:
+
+        2. Cick **Save**
+
+    2. Click the **Account Linking** tab of the Alexa skill console, and: 
+
+        1. Copy the value of the **AlexaAuthorizationURI** output from CloudFormation into the **Authorization URI** box of the Alexa configuration.
+        2. Copy the value of the **AlexaAccessTokenURI** output from CloudFormation into the **Access Token URI** box of the Alexa configuration.
+        3. Copy the value of the **AlexaClientId** output from CloudFormation into the **Client ID** box of the Alexa configuration.
+        4. Click the link in the value field of **AlexaClientSecret** in CloudFormation; you will be taken to a secret in AWS Secrets Manager; scroll down and click **Retrieve secret value** and copy the value of **clientSecret** from AWS Secrets Manager into the **Client Secret** box of the Alexa configuration. 
+        5. Select **HTTP Basic (recommended)** as the **Client Authentication Scheme** in the Alexa configuration. 
+        6. Add **phone** and **openid** as values to the **Scope** section of the Alexa Configuration. Note - spelling and case must exactly match. 
+        7. Leave **Domain List** and **Default Access Token Expiration Time** blank. 
+        8. Click Save:
+
+## Test your skill
+
+At this point, your Alexa skill is properly linked to your backend Lambda function (for processing user directives) and your Cognito user pool (for user signup & authentication). You are now ready to sign up to test the skill with Alexa!
+
+### Test via mobile app
+
+1. Install the Amazon Alexa app ([Android](https://play.google.com/store/apps/details?id=com.amazon.dee.app&hl=en_US), [iOS](https://itunes.apple.com/us/app/amazon-alexa/id944011620?mt=8)) and sign in / register with the Alexa app using the same email address that you used to create your Alexa skill. 
