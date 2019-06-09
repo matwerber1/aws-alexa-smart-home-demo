@@ -2,30 +2,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   aws-alexa-smart-home-demo
-
-Parameters:
-  AlexaSkillId: 
-      NoEcho: true
-      Description: The skill ID of your skill as shown in the Alexa Developer Console (https://developer.amazon.com/alexa/console/ask)
-      Type: String
-      Default: amzn1.ask.skill.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  AlexaVendorId: 
-      NoEcho: true
-      Description: Your Alexa Developer vendor ID (https://developer.amazon.com/settings/console/mycid)
-      Type: String
-      Default: XXXXXXXXXXXXX
-  AlexaCustomerId: 
-      NoEcho: true
-      Description: Your Alexa Developer customer ID (https://developer.amazon.com/settings/console/mycid)
-      Type: String
-      Default: XXXXXXXXXXXXX
       
 Mappings: 
   Config: 
-    Alexa: 
-      SkillId: 'amzn1.ask.skill.1bb2f0b3-c480-43a8-a428-e201ea6b04b3'   # Obtain from 
-      VendorId: 'MGPNN68VCOJJ4'                                         # Obtain from 
-      CustomerId: 'A2JPVXNA7ZPISI'                                      # Obtain from 
+    Alexa:                           
+      # This value must match the name of the AWS Secrets Manager secret that
+      # contains your Alexa SkillId, VendorId, and CustomerId:       
+      SecretName: AlexaSmartHomeSkillCredentials
 
 Globals:
   Function:
@@ -38,6 +21,17 @@ Globals:
         STACK_NAME: !Ref AWS::StackName
 
 Resources:
+
+  AlexaSkillIdSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Description: ID of your Alexa skill as shown in the Alexa Developer Console (https://developer.amazon.com/alexa/console/ask)
+      SecretString: 
+        # Note - To improve security, you should manually (via console or API)
+        # update this secret's value directly in Secrets Manager with the
+        # actual value from the Alexa Developer Console rather than hard-coding
+        # it directly in this CloudFormation template.
+        "{\"SkillId\":\"YOUR_SKILL_ID\"}"
 
   ##############################################################################
   CloudFormationResponseLayer:
@@ -170,6 +164,11 @@ Resources:
       GenerateSecret: true
       UserPoolId: !Ref CognitoUserPool
 
+  # Note - the Callback URL below contains your Alexa vendor ID and is passed
+  # to the custom Lambda resource in the API call in plain text. As your vendor
+  # ID is a secret, this method is not secure. TODO: update code to pass the
+  # secret name to the custom Lambda, rather than the secret value. Then, the
+  # Lambda should retrieve the secret value itself directly from AWS Secrets Manager. 
   CognitoClientConfiguration:
     Type: 'Custom::CognitoClientConfiguration'
     Properties:
@@ -182,7 +181,9 @@ Resources:
           Fn::Join:
             - ""
             - - "https://pitangui.amazon.com/api/skill/link/"
-              - !FindInMap [Config, Alexa, VendorId]  
+              - !Sub 
+                - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:VendorId}}'
+                - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
@@ -320,7 +321,10 @@ Resources:
     DependsOn: AlexaSkillFunction
     Properties:
         Action: lambda:InvokeFunction
-        EventSourceToken: !FindInMap [Config, Alexa, SkillId]
+        EventSourceToken: 
+          !Sub 
+            - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:SkillId}}'
+            - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
         FunctionName: !GetAtt AlexaSkillFunction.Arn
         Principal: alexa-connectedhome.amazon.com
 
@@ -475,6 +479,9 @@ Outputs:
     Description: Used to configure skill in Alexa Developer Console. 
     Value: !GetAtt AlexaSkillFunction.Arn
 
+  # Note - the URI below contains your Alexa developer account ID, which should
+  # be considered a secret. You may want to remove this output from the template
+  # in a production scenario to protect this secret value. 
   AlexaAuthorizationURI:
     Description: Used to configure Account Linking in Alexa Developer Console.
     Value: 
@@ -484,7 +491,9 @@ Outputs:
           - '/oauth2/authorize?response_type=code&client_id='
           - !Ref CognitoAlexaAppClient
           - 'redirect_uri=https://pitangui.amazon.com/api/skill/link/'
-          - !FindInMap [Config, Alexa, VendorId]
+          - !Sub 
+              - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:VendorId}}'
+              - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
           - '&state=STATE'
         
   AlexaAccessTokenURI:
