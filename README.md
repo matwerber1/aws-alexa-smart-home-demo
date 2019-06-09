@@ -1,4 +1,4 @@
-# **Note: this is a work in process, not yet**
+# **Note: this is a work in process, not yet completed**
 
 Some components are not yet functional and/or in early draft stage. 
 
