@@ -10,7 +10,7 @@ This project aims to quickly give you a more realistic, end-to-end smart home sk
 
 1. Real (developer user) sign-up via an Alexa-enabled smart speaker (e.g. an [Echo Dot](https://www.amazon.com/All-new-Echo-Dot-3rd-Gen/dp/B0792KTHKJ)), [Alexa web app](https://alexa.amazon.com), Alexa mobile app ( [Android](https://play.google.com/store/apps/details?id=com.amazon.dee.app&hl=en_US), [iOS](https://itunes.apple.com/us/app/amazon-alexa/id944011620?mt=8)), or the test tool from the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask/). 
 
-2. [An AWS IoT Core "Thing"](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) that is a logical cloud representation of a physical smart home device. Your Alexa skill will send commands to or read device state from the IoT Thing. Your physical device will receive commands from or send device state updates to the IoT Thing. 
+2. [An AWS IoT Core "Thing"](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) that is a logical cloud representation of a physical smart home device. Your Alexa skill will send commands to or read device state from the IoT Thing. Your physical device will receive commands from or send device state updates to the IoT Thing. While an AWS IoT Core "thing" is not required, it greatly simplifies the interaction between the physical world and your backend services. In a production scenario, each physical device would be mapped to a unique IoT thing. 
 
 3. A [Cognito user pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) that acts as the identity provider (IdP) for your skill and stores the credentials and attributes of your signed-up users. 
 
@@ -19,6 +19,8 @@ This project aims to quickly give you a more realistic, end-to-end smart home sk
 5. A main [AWS Lambda](https://aws.amazon.com/lambda/) function that handles interaction between the AWS-managed Alexa service and your customer-managed AWS cloud backend resources listed above. 
 
 6. OPTIONAL - An [ESP32](https://www.amazon.com/HiLetgo-ESP-WROOM-32-Development-Microcontroller-Integrated/dp/B0718T232Z) with some LEDs and temp/humidity sensor that is linked to your AWS IoT Thing. The LEDs react to commands you give to Alexa and the device sends temp & humidity readings back to the IoT Thing which Alexa can provide to a user upon request. 
+
+In addition to the core components above, a number of helper resources will be created via a CloudFormation template as part of the deployment steps outlined within this guide. 
 
 ## Prerequisites
 
