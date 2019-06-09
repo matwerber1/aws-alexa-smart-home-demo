@@ -68,24 +68,26 @@ In addition to the core components above, a number of helper resources will be c
 
 7. Install the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html). The SAM CLI is provides several tools that make serverless app development on AWS easy, including the ability to locally test AWS Lambda functions. The specific functionality we will use is SAM's ability to translate and deploy short-hand SAM YAML templates into full-fledged CloudFormation templates. 
 
-8. Edit **deploy.sh** and set the BUCKET variable to the name of an S3 bucket to use for storing later CloudFormation templates. It's recommend that you leave the **STACK_NAME=** parameter set to **alexa-smart-home-demo** as we will reference this stack name in later steps. 
+8. Add script or instructions for installing Node dependencies via npm in local folders before running the deploy.sh script. Without this step, the Lambda(s) that require external dependencies with fail when invoked with a "module not found" error on the `const some_package = require('package_name')` command. 
+
+9. Edit **deploy.sh** and set the BUCKET variable to the name of an S3 bucket to use for storing later CloudFormation templates. It's recommend that you leave the **STACK_NAME=** parameter set to **alexa-smart-home-demo** as we will reference this stack name in later steps. 
 
     ```sh
     # deploy.sh
     BUCKET=your_bucket_name
     ```
 
-9. Build and deploy the CloudFormation template by running deploy.sh from the project root:
+10. Build and deploy the CloudFormation template by running deploy.sh from the project root:
 
     ```sh
     $ ./deploy.sh
     ```
 
-10. Monitor the status of your stack from the [CloudFormation console](https://console.aws.amazon.com/cloudformation/) and wait for the status to show as **CREATE_COMPLETE**. 
+11. Monitor the status of your stack from the [CloudFormation console](https://console.aws.amazon.com/cloudformation/) and wait for the status to show as **CREATE_COMPLETE**. 
 
-11. From the CloudFormation console, click the **alexa-smart-home-demo** stack and then click the **Outputs** section. Here, you will see a number of values that we will plug in to your skill's configuration in the Alexa Developer Console to complete our skill setup. 
+12. From the CloudFormation console, click the **alexa-smart-home-demo** stack and then click the **Outputs** section. Here, you will see a number of values that we will plug in to your skill's configuration in the Alexa Developer Console to complete our skill setup. 
 
-12. While keeping the CloudFormation console open, open the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask/), click **Edit** next to the skill you created previously, and copy-paste (or enter) the following values:
+13. While keeping the CloudFormation console open, open the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask/), click **Edit** next to the skill you created previously, and copy-paste (or enter) the following values:
 
     1. Click the **Smart Home** tab of the Alexa skill console, and: 
 
@@ -103,6 +105,10 @@ In addition to the core components above, a number of helper resources will be c
         6. Add **phone** and **openid** as values to the **Scope** section of the Alexa Configuration. Note - spelling and case must exactly match. 
         7. Leave **Domain List** and **Default Access Token Expiration Time** blank. 
         8. Click Save:
+
+## Optional - Hardware Setup
+
+TODO: Document process for building the ESP32 mock thermostat and linking it to your AWS backend via AWS IoT Core. 
 
 ## Test your skill
 
