@@ -3,12 +3,28 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   aws-alexa-smart-home-demogit stat
       
-Mappings: 
-  Config: 
-    Alexa:                           
-      # This value must match the name of the AWS Secrets Manager secret that
-      # contains your Alexa SkillId, VendorId, and CustomerId:       
-      SecretName: AlexaSmartHomeSkillCredentials
+#Mappings: 
+#  Config: 
+#    Alexa:                           
+#      # This value must match the name of the AWS Secrets Manager secret that
+#      # contains your Alexa SkillId, VendorId, and CustomerId:       
+#      SecretName: AlexaSmartHomeSkillCredentials
+#    ForceUpdate:
+#      UpdateString: xxxx # Change this to *any* value to force an update to resources that rely on resolving values from the manually-created secret named "AlexaSmartHomeSkillCredentials" in AWS Secrets Manager 
+
+#Conditions: 
+#  UpdateResourceCondition: 
+#    !Not [ !Equals [ !FindInMap [ Config, ForceUpdate, UpdateString ], do_not_update ] ]
+
+Parameters:
+  AlexaSkillId:
+    Type: String
+    Description: Your Alexa Skill ID as shown from the Alexa Developer Console
+    
+  AlexaVendorId:
+    Type: String
+    Description: Your Alexa Vendor ID as shown from the Alexa Developer Console
+    
 
 Globals:
   Function:
@@ -31,7 +47,7 @@ Resources:
         # update this secret's value directly in Secrets Manager with the
         # actual value from the Alexa Developer Console rather than hard-coding
         # it directly in this CloudFormation template.
-        "{\"SkillId\":\"YOUR_SKILL_ID\"}"
+        "{\"SkillId\":\"YOUR_SKILL_ID\", \"VendorId\":\"YOUR_VENDOR_ID\", \"CustomerId\":\"YOUR_CUSTOMER_ID\"}"
 
   ##############################################################################
   CloudFormationResponseLayer:
@@ -171,6 +187,7 @@ Resources:
   # Lambda should retrieve the secret value itself directly from AWS Secrets Manager. 
   CognitoClientConfiguration:
     Type: 'Custom::CognitoClientConfiguration'
+#    Condition: UpdateResourceCondition
     Properties:
       ServiceToken: !GetAtt CognitoClientConfigurationProvider.Arn
       UserPoolId: !Ref CognitoUserPool
@@ -181,12 +198,13 @@ Resources:
           Fn::Join:
             - ""
             - - "https://pitangui.amazon.com/api/skill/link/"
-              - !Sub 
-                - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:VendorId}}'
-                - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
+              - !Ref AlexaVendorId
+#              - !Sub 
+#                - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:VendorId}}'
+#                - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
-        - code
+        - "code"
         - implicit
       AllowedOAuthScopes:
         - openid
@@ -319,12 +337,14 @@ Resources:
   AlexaSkillFunctionPermission:
     Type: AWS::Lambda::Permission
     DependsOn: AlexaSkillFunction
+#    Condition: UpdateResourceCondition
     Properties:
         Action: lambda:InvokeFunction
         EventSourceToken: 
-          !Sub 
-            - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:SkillId}}'
-            - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
+          !Ref AlexaSkillId
+#          !Sub 
+#            - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:SkillId}}'
+#            - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
         FunctionName: !GetAtt AlexaSkillFunction.Arn
         Principal: alexa-connectedhome.amazon.com
 
@@ -483,6 +503,7 @@ Outputs:
   # be considered a secret. You may want to remove this output from the template
   # in a production scenario to protect this secret value. 
   AlexaAuthorizationURI:
+#    Condition: UpdateResourceCondition
     Description: Used to configure Account Linking in Alexa Developer Console.
     Value: 
       Fn::Join: 
@@ -491,9 +512,10 @@ Outputs:
           - '/oauth2/authorize?response_type=code&client_id='
           - !Ref CognitoAlexaAppClient
           - 'redirect_uri=https://pitangui.amazon.com/api/skill/link/'
-          - !Sub 
-              - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:VendorId}}'
-              - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
+          - !Ref AlexaVendorId
+#          - !Sub 
+#              - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:VendorId}}'
+#              - { AlexaSecretName: !FindInMap [Config, Alexa, SecretName]}
           - '&state=STATE'
         
   AlexaAccessTokenURI:

@@ -1,4 +1,3 @@
-var util = require("util");
 var AWS = require("aws-sdk");
 var dynamodb = new AWS.DynamoDB.DocumentClient();
 
@@ -7,7 +6,7 @@ var deviceTableName = process.env.DEVICE_TABLE;
 exports.handler = async (event) => {
 
     try {
-        console.log(`Received event:\n${util.inspect(event)}`);
+        console.log(`Received event:\n${JSON.stringify(event)}`);
         await associateDeviceToUser(event);
         const response = {
             statusCode: 200,

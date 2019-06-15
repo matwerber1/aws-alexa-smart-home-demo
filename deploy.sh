@@ -1,3 +1,9 @@
+#!/bin/bash
+
+# Install dependencies
+#$(cd lambda/functions/cognito-verifyAuthToken && npm install)
+#$(cd lambda/functions/cfProvider-uuid && npm install)
+
 BUCKET=werberm-sandbox
 STACK_NAME=alexa-smart-home-demo
 

@@ -2,6 +2,7 @@ packaged.yaml
 alexa
 node_modules/
 esp32/
+mydeploy.sh
 
 # Created by https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode
 

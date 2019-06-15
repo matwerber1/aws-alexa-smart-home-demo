@@ -1,11 +1,10 @@
-var util = require("util");
 var AWS = require("aws-sdk");
 var iot = new AWS.Iot();
 
 exports.handler = async (event) => {
  
     try {
-        console.log(`Received event:\n${util.inspect(event)}`);
+        console.log(`Received event:\n${JSON.stringify(event)}`);
 
         var thing = event.thing;
         thing.thingName = thing.deviceType + '_' + thing.serialNumber;
