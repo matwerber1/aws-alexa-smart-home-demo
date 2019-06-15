@@ -159,46 +159,36 @@ Now that our skill and backend cloud infrastructure exists, we can now sign up t
 
 2. Open the Alexa app and click **Devices** in the lower right:
 
-    ![register-1]
+    <img src="./images/register-1.PNG" width="50%">
 
 3. Click **Your Smart Home Skills** in the middle of the screen:
 
-    ![register-2]
+    <img src="./images/register-2.PNG" width="50%">
 
 4. You should see a skill named **alexa-smart-home-demo** (or, whatever name you used when creating your skill in the Alexa Developer Console). If you do not see your skill, ensure that you are signed in to the Alexa app using the same email you used in the Alexa Developer Console or using an email that you sent a beta invitation to. Click the skill name: 
 
-    ![register-3]
+    <img src="./images/register-3.PNG" width="50%">
 
 5. Click **Enable to use**:
 
-    ![register-4]
+    <img src="./images/register-4.PNG" width="50%">
 
 6. You will be brought to a sign-in screen. Click **sign up**:
 
-    ![register-5]
+    <img src="./images/register-5.PNG" width="50%">
 
 7. Sign up for your skill with your mobile number (for US numbers, must be in the format "+1xxxyyyzzzz"):
 
-    ![register-6]
+    <img src="./images/register-6.PNG" width="50%">
 
 8. You will receive a verification code via SMS text. Enter that code to complete the sign-up process:
 
-    ![register-7]
+    <img src="./images/register-7.PNG" width="50%">
 
 9. You should be greeted with a **successfully linked** message. Close the window to start the device discovery process:
 
-    ![register-8]
+    <img src="./images/register-8.PNG" width="50%">
 
 10. Click **Discover Devices** to have the Alexa Cloud invoke your skill's Lambda function to search for and tell Alexa which device(s) are registered to your account: 
 
-    ![register-9]
-
-[register-1]: ./images/register-1.PNG
-[register-2]: ./images/register-2.PNG
-[register-3]: ./images/register-3.PNG
-[register-4]: ./images/register-4.PNG
-[register-5]: ./images/register-5.PNG
-[register-6]: ./images/register-6.PNG
-[register-7]: ./images/register-7.PNG
-[register-8]: ./images/register-8.PNG
-[register-9]: ./images/register-9.PNG
+    <img src="./images/register-9.PNG" width="50%">
