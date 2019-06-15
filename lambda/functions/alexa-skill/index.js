@@ -18,7 +18,7 @@ exports.handler = async function (request, context) {
         log("Alexa context:\n", context);
 
         if (!('directive' in request)) {
-            return sendErrorResponse(
+            throw new AlexaException(
                 'INVALID_DIRECTIVE',
                 'directive is missing from request'
             );
@@ -30,34 +30,30 @@ exports.handler = async function (request, context) {
         //let namespace = ((request.directive || {}).header || {}).namespace;
 
         if (header.payloadVersion !== REQUIRED_PAYLOAD_VERSION) {
-            return sendErrorResponse(
+            throw new AlexaException(
                 'INVALID_DIRECTIVE', 
                 `Payload v${header.payloadVersion} unsupported.`
                 + `Expected v${REQUIRED_PAYLOAD_VERSION}`
             );
         }
         
-        var authResponse = await getAuthTokenValidationResponse(
-            request.directive.payload.scope.token
-        );
-        if (authResponse.hasOwnProperty('FunctionError')) {
-            let authError = JSON.parse(authResponse.Payload);
-            if (authError.errorMessage === 'Token is expired') {
-                return sendErrorResponse(
-                    'EXPIRED_AUTHORIZATION_CREDENTIAL', 
-                    `Auth token is expired`
-                );
-            }
-            else {
-                return sendErrorResponse(
-                    'INVALID_AUTHORIZATION_CREDENTIAL', 
-                    `Auth token invalid`
-                );
-            }
+        // The location of the user's auth token in the request received from 
+        // the Alexa service (oddly) differs, depending on whether the request
+        // is a discovery request or not. 
+        var authToken;
+        console.log('Checking auth token...');
+        if (namespace.toLowerCase() === 'alexa.discovery') {
+            authToken = request.directive.payload.scope.token;
+        }
+        else {
+            authToken = request.directive.endpoint.scope.token;
         }
 
+        // Get the user info from the authToken, or throw an error if token invalid.
+        var authResponse = await getAuthTokenValidationResponse(authToken);
         var authToken = JSON.parse(authResponse.Payload);
 
+        // Take action based on user's intent: 
         if (namespace.toLowerCase() === 'alexa.discovery') {
             let response = await handleDiscovery(request, context, authToken);
             return sendResponse(response.get());
@@ -67,20 +63,30 @@ exports.handler = async function (request, context) {
             let response = await handleThermostatControl(request, context);
             return sendResponse(response.get());
         }
-            
         else {       
-            return sendErrorResponse(
+            throw new AlexaException(
                 'INVALID_DIRECTIVE', 
                 `Namespace ${namespace} is unsupported by this skill.`
             );
         }
     }
     catch (err) {
-        log('ERROR:\n', err);
-        return sendErrorResponse(
-            'INTERNAL_ERROR', 
-            `Unhandled error: ${err}`
-        );
+        log('Error:\n' + err);
+        log('Stack:\n' + err.stack);
+        let errorType, errorMessage;
+
+        // if AlexaError key is present (regardless of value), then we threw
+        // an error intentionally and we want to bubble up a specific Alexa
+        // error type. If the key is not present, it is an unhandled error and
+        // we respond with a generic Alexa INTERNAL_ERROR message.
+        if (err.hasOwnProperty('AlexaError')) {
+            errorType = err.name;
+            errorMessage = err.message;
+        } else {
+            errorType = 'INTERNAL_ERROR';
+            errorMessage = `Unhandled error: ${err}`
+        }
+        return sendErrorResponse(errorType, errorMessage);
     }
 
 };
@@ -116,8 +122,8 @@ This function calls another function to determine whether the auth token
 provided by Alexa during invocation is valid and not expired.  
 */
 async function getAuthTokenValidationResponse(token) {
-
     try {
+        log('Validating auth token...');
         var params = {
             FunctionName: VERIFY_COGNITO_TOKEN_FUNCTION, 
             InvocationType: "RequestResponse", 
@@ -125,10 +131,28 @@ async function getAuthTokenValidationResponse(token) {
         };
     
         let response = await lambda.invoke(params).promise();
+
+        if (response.hasOwnProperty('FunctionError')) {
+            let authError = JSON.parse(authResponse.Payload);
+            if (authError.errorMessage === 'Token is expired') {
+                throw new AlexaException(
+                    'EXPIRED_AUTHORIZATION_CREDENTIAL',
+                    'Auth token is expired'
+                );
+            }
+            else {
+                throw new AlexaException(
+                    'INVALID_AUTHORIZATION_CREDENTIAL',
+                    'Auth token is invalid'
+                );
+            }
+        }
+        console.log('Auth token is valid...');
         return response;
     }
     catch (err) {
-        throw (`Error invoking ${VERIFY_COGNITO_TOKEN_FUNCTION}: ${err}`);
+        console.log(`Error invoking ${VERIFY_COGNITO_TOKEN_FUNCTION}: ${err}`);
+        throw (err);
     }
 
 
@@ -141,7 +165,7 @@ that returns a list of all devices associated to that user.
 */
 async function getUserEndpoints(userId) {
 
-    log("Getting user endpoints");
+    log("Getting user endpoints...");
     var payload = JSON.stringify({
         userId: userId
     });
@@ -214,8 +238,8 @@ This function handles all requests that Alexa identifies as being a
 
 */
 async function handleThermostatControl(request, context) {
-    log("Calling handleThermostatControl()");
-    let endpoint_id = request.directive.endpoint.endpointId;
+
+    let endpointId = request.directive.endpoint.endpointId;
     let token = request.directive.endpoint.scope.token;
     let correlationToken = request.directive.header.correlationToken;
     let requestMethod = request.directive.header.name; 
@@ -224,98 +248,77 @@ async function handleThermostatControl(request, context) {
         {
             "correlationToken": correlationToken,
             "token": token,
-            "endpointId": endpoint_id
+            "endpointId": endpointId
         }
     );
-
-    var authTokenValidationResponse = await getAuthTokenValidationResponse(
-        request.directive.endpoint.scope.token
-    );
-
-    if (authTokenValidationResponse.hasOwnProperty('FunctionError')) {
-        log("ERROR: Authentication error:\n", authTokenValidationResponse);
-    } 
-    else {
-
-        var endpointId = request.directive.endpoint.endpointId;
-
-        let alexaResponse = new AlexaResponse(
-            {
-                "correlationToken": correlationToken,
-                "token": token,
-                "endpointId": endpoint_id
-            }
-        );
-        
-        log(`Request method is ${requestMethod}`);
     
-        if (requestMethod === 'SetTargetTemperature') {
-            
-            // TODO - update the device shadow's desired state
+    log(`Running ThermostatControl handler for ${requestMethod} method`);
 
-            let targetpointContextProperty = {
-                namespace: "Alexa.ThermostatController",
-                name: "targetSetpoint",
-                value: {
-                    value: request.directive.payload.targetSetpoint.value,
-                    scale: request.directive.payload.targetSetpoint.scale
-                }
-            };
+    if (requestMethod === 'SetTargetTemperature') {
+        
+        // TODO - update the device shadow's desired state
 
-            alexaResponse.addContextProperty(targetpointContextProperty);
-            return alexaResponse.get();
+        let targetpointContextProperty = {
+            namespace: "Alexa.ThermostatController",
+            name: "targetSetpoint",
+            value: {
+                value: request.directive.payload.targetSetpoint.value,
+                scale: request.directive.payload.targetSetpoint.scale
+            }
+        };
 
-        }
-        else if (requestMethod === 'SetThermostatMode') {
-            
-            var shadowState = {
-                state: {
-                    desired: {
-                        mode: request.directive.payload.thermostatMode.value
-                    }
+        alexaResponse.addContextProperty(targetpointContextProperty);
+        return alexaResponse.get();
+
+    }
+    else if (requestMethod === 'SetThermostatMode') {
+        
+        var shadowState = {
+            state: {
+                desired: {
+                    mode: request.directive.payload.thermostatMode.value
                 }
             }
-
-            var params = {
-                payload: JSON.stringify(shadowState) /* Strings will be Base-64 encoded on your behalf */, /* required */
-                thingName: endpointId /* required */
-            };
-            log(`Updating shadow of ${endpointId}:\n`, shadowState);
-            var updateShadowResponse = await iotdata.updateThingShadow(params).promise();
-            log(`Update shadow response:\n`, updateShadowResponse);
-            
-
-
-            let targetpointContextProperty = {
-                namespace: "Alexa.ThermostatController",
-                name: "thermostatMode",
-                value: request.directive.payload.thermostatMode.value
-            };
-            alexaResponse.addContextProperty(targetpointContextProperty);
-            return alexaResponse.get();
         }
-        else {
-            log(`ERROR: Unsupported request method ${requestMethod} for ThermostatController.`);
-            return new AlexaResponse(
-                {
-                    "name": "ErrorResponse",
-                    "payload": {
-                        "type": "INTERNAL_ERROR",
-                        "message": `Unsupported request method ${requestMethod} for ThermostatController.`
-                    }
-                }).get();
-        }    
-    }
 
+        var params = {
+            payload: JSON.stringify(shadowState) /* Strings will be Base-64 encoded on your behalf */, /* required */
+            thingName: endpointId /* required */
+        };
+        log(`Updating shadow of ${endpointId}:\n`, shadowState);
+        var updateShadowResponse = await iotdata.updateThingShadow(params).promise();
+        log(`Update shadow response:\n`, updateShadowResponse);
+        
+
+
+        let targetpointContextProperty = {
+            namespace: "Alexa.ThermostatController",
+            name: "thermostatMode",
+            value: request.directive.payload.thermostatMode.value
+        };
+        alexaResponse.addContextProperty(targetpointContextProperty);
+        return alexaResponse.get();
+    }
+    else {
+        log(`ERROR: Unsupported request method ${requestMethod} for ThermostatController.`);
+        return new AlexaResponse(
+            {
+                "name": "ErrorResponse",
+                "payload": {
+                    "type": "INTERNAL_ERROR",
+                    "message": `Unsupported request method ${requestMethod} for ThermostatController.`
+                }
+            }).get();
+    }    
 }
 
-function sendResponse(response)
-{
-    log("Lambda response:\n", response);
+function sendResponse(response) {
+    log("Lambda response to Alexa Cloud:\n", response);
     return response
 }
 
 function sendErrorResponse(type, message) {
+    log("Preparing error response to Alexa Cloud...");
     let alexaErrorResponse = new AlexaResponse({
         "name": "ErrorResponse",
         "payload": {
@@ -324,4 +327,15 @@ function sendErrorResponse(type, message) {
         }
     });
     return sendResponse(alexaErrorResponse.get());
+}
+
+function AlexaException(name, message) {
+    log('Creating handled Alexa exception...');
+    // The error name should be one of the Alexa.ErrorResponse interface types:
+    // https://developer.amazon.com/docs/device-apis/alexa-errorresponse.html
+    var error = new Error(); 
+    this.stack = error.stack;
+    this.name = name;
+    this.message = message;
+    this.AlexaError = true;
 }
