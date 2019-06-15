@@ -333,6 +333,16 @@ Resources:
             Action:
               - iot:*
             Resource: "*"
+        - Statement:
+          - 
+            Sid: ReadFromDynamoDB
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:BatchGetItem
+            Resource: "*"
 
   AlexaSkillFunctionPermission:
     Type: AWS::Lambda::Permission
