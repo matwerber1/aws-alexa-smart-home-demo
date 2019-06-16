@@ -13,6 +13,13 @@ const lambda = new AWS.Lambda();
 const REQUIRED_PAYLOAD_VERSION = "3";
 const DEVICE_TABLE_NAME = process.env.DEVICE_TABLE;
 
+// For debugging / test purposes if you do not have a physical device linked to
+// your Thing in the IoT Core Registry, set the value below to true; this will
+// copy your desired state changes to the reported state changes. Normally, 
+// only the physical device would update reported state. If using a physical device,
+// set the value below to false:
+const copyDesiredStateToReportedStateInShadow = true;
+
 exports.handler = async function (request, context) {
 
     try {
@@ -48,7 +55,7 @@ exports.handler = async function (request, context) {
            
             var endpoint = await verifyEndpointAndGetEndpointDetail(userId, directive.endpoint.endpointId);
     
-            verifyEndpointIsOnline(endpoint);
+            verifyEndpointConnectivity(endpoint);
 
             if (namespace === 'Alexa.ThermostatController') {
                 var response = await handleThermostatControl(request, context, endpoint);
@@ -87,7 +94,7 @@ exports.handler = async function (request, context) {
 
 };
 
-function verifyEndpointIsOnline(endpoint) {
+function verifyEndpointConnectivity(endpoint) {
 
     log('Verifying endpoint is online...');
     var shadow = endpoint.shadow;
@@ -100,11 +107,11 @@ function verifyEndpointIsOnline(endpoint) {
         throw new AlexaException('ENDPOINT_UNREACHABLE', 'Shadow does not contain a state.reported object');
     }
     
-    if (shadow.state.reported.hasOwnProperty('online') === false) {
-        throw new AlexaException('ENDPOINT_UNREACHABLE', 'Shadow does not contain a state.reported.online object');
+    if (shadow.state.reported.hasOwnProperty('connectivity') === false) {
+        throw new AlexaException('ENDPOINT_UNREACHABLE', 'Shadow does not contain a state.reported.connectivity object');
     }
     
-    if (shadow.state.reported.online !== true) {
+    if (shadow.state.reported.connectivity !== "OK") {
         throw new AlexaException('ENDPOINT_UNREACHABLE', `Device unavailable, reported online=${shadow.state.reported.online}`);
     }
 
@@ -465,6 +472,11 @@ async function handleThermostatControl(request, context, endpoint) {
             }
         };
 
+        // For debugging purposes, we may choose to copy the desired state to reported state:
+        if (copyDesiredStateToReportedStateInShadow === true) {
+            shadowState.state.reported = shadowState.state.desired;
+        }
+
         await updateThingShadow(thingName, shadowState);
 
         var targetpointContextProperty = {
@@ -521,6 +533,11 @@ async function handleThermostatControl(request, context, endpoint) {
             }
         };
 
+        // For debugging purposes, we may choose to copy the desired state to reported state:
+        if (copyDesiredStateToReportedStateInShadow === true) {
+            shadowState.state.reported = shadowState.state.desired;
+        }
+
         await updateThingShadow(thingName, shadowState);
 
         var targetpointContextProperty = {
@@ -544,6 +561,11 @@ async function handleThermostatControl(request, context, endpoint) {
                 }
             }
         };
+
+        // For debugging purposes, we may choose to copy the desired state to reported state:
+        if (copyDesiredStateToReportedStateInShadow === true) {
+            shadowState.state.reported = shadowState.state.desired;
+        }
 
         await updateThingShadow(thingName, shadowState);
 
