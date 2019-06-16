@@ -1,8 +1,8 @@
 module.exports = {
     "env": {
-        "node": true,
-        "commonjs": true,
-        "es6": true
+        "browser": false,
+        "es6": true, 
+        "node": true
     },
     "extends": "eslint:recommended",
     "globals": {
@@ -10,10 +10,10 @@ module.exports = {
         "SharedArrayBuffer": "readonly"
     },
     "parserOptions": {
-        "ecmaVersion": 2018
+        "ecmaVersion": 2018,
+        "sourceType": "module"
     },
     "rules": {
-        'no-console': 'off',
-        'no-process-env': 'off',
+        "no-console": 0
     }
 };

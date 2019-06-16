@@ -20,6 +20,16 @@ const discoveryConfig = {
                 'THERMOSTAT',
                 'TEMPERATURE_SENSOR'
             ],
+            validRange: {
+                minimumValue: {
+                    value: 60.0,
+                    scale: "FAHRENHEIT"
+                },
+                maximumValue: {
+                    value: 90.0,
+                    scale: "FAHRENHEIT"
+                }
+            },
             capabilities: [
                 {
                     // Basic capability that should be included for all

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const AWS = require("aws-sdk");
 
 const GET_DEVICES_BY_USER_FUNCTION = process.env.GET_DEVICES_BY_USER_FUNCTION;
@@ -58,11 +59,11 @@ exports.handler = async function (request, context) {
             verifyEndpointConnectivity(endpoint);
 
             if (namespace === 'Alexa.ThermostatController') {
-                var response = await handleThermostatControl(request, context, endpoint);
+                let response = await handleThermostatControl(request, context, endpoint);
                 return sendResponse(response.get());
             }
             else if (namespace === 'Alexa' && name === 'ReportState') {
-                var response = await handleReportState(request, context, endpoint);
+                let response = await handleReportState(request, context, endpoint);
                 return sendResponse(response.get());
             }
             else {       
@@ -76,7 +77,7 @@ exports.handler = async function (request, context) {
     catch (err) {
         log(`Error: ${err.name}: ${err.message}`);
         log('Stack:\n' + err.stack);
-        var errorType, errorMessage;
+        var errorType, errorMessage, additionalPayload;
 
         // if AlexaError key is present (regardless of value), then we threw
         // an error intentionally and we want to bubble up a specific Alexa
@@ -85,11 +86,12 @@ exports.handler = async function (request, context) {
         if (err.hasOwnProperty('AlexaError')) {
             errorType = err.name;
             errorMessage = err.message;
+            additionalPayload = checkValue(err.additionalPayload, undefined);
         } else {
             errorType = 'INTERNAL_ERROR';
             errorMessage = `Unhandled error: ${err}`
         }
-        return sendErrorResponse(errorType, errorMessage);
+        return sendErrorResponse(errorType, errorMessage, additionalPayload);
     }
 
 };
@@ -186,7 +188,7 @@ async function verifyEndpointAndGetEndpointDetail(userId, endpointId) {
         // The IoT describeThing() API will throw an error if the given thing
         // name does not exist, so we must wrap in a try/catch block.
         console.log('Verifying existence of endpoint in AWS IoT Registry...');
-        var params = {
+        let params = {
             thingName: endpointId
         };
         log('Calling iot.describeThing() with params:', params);
@@ -272,7 +274,7 @@ async function verifyAuthTokenAndGetUserId(namespace, directive, ignoreExpiredTo
         var response = await lambda.invoke(params).promise();
 
         if (response.hasOwnProperty('FunctionError')) {
-            var authError = JSON.parse(authResponse.Payload);
+            var authError = JSON.parse(response.Payload);
             if (authError.errorMessage === 'Token is expired'
                  && ignoreExpiredToken === true) {
                 throw new AlexaException(
@@ -288,7 +290,7 @@ async function verifyAuthTokenAndGetUserId(namespace, directive, ignoreExpiredTo
             }
         }
         console.log('Auth token is valid...');
-        plaintextAuthToken = JSON.parse(response.Payload);
+        var plaintextAuthToken = JSON.parse(response.Payload);
 
         // Cognito has both a username and a sub; a sub is unique and never
         // reasigned; a username can be reasigned; it is therefore important
@@ -336,7 +338,7 @@ async function getUserEndpoints(userId) {
     var endpoints = [];
 
     for (const device of devices) {
-        var params = {
+        let params = {
             thingName: device.thingName
         };
 
@@ -373,6 +375,32 @@ function log(message1, message2) {
     }
 }
 
+function validateSetpointIsInAllowedRange(setpoint, validRange) {
+
+    // We convert to the minValue's scale; we don't bother to check whether the min and max are different
+    // scales in the discoveryConfig.js file; it would be odd to have them different. 
+    let minValue = validRange.minimumValue.value;
+    let maxValue = validRange.maximumValue.value;
+    let validScale = validRange.minimumValue.scale;
+    let desiredValue = convertTemperature(setpoint.value, setpoint.scale, validScale);
+    
+    if (minValue <= desiredValue && desiredValue <= maxValue) {
+        log(`Requested setpoint of ${desiredValue} within allowed range of ${minValue} to ${maxValue} ${validScale}.`);
+        return;
+    }
+    else {
+        var errorPayload = {
+            validRange: validRange
+        };
+        throw new AlexaException(
+            'TEMPERATURE_VALUE_OUT_OF_RANGE',
+            `Requested setpoint of ${desiredValue} outside allowed range of ${minValue} to ${maxValue} ${validScale}.`,
+            errorPayload
+        );
+    }
+
+}
+
 async function handleReportState(request, context, endpoint) {
     
     log('Gathering state from IoT Thing shadow to report back to Alexa...');
@@ -393,40 +421,34 @@ async function handleReportState(request, context, endpoint) {
     );
 
     // Gather current properties and add to our response
-
-    var targetpointContextProperty = {
+    alexaResponse.addContextProperty({
         namespace: "Alexa.EndpointHealth",
         name: "connectivity",
         value: {
             value: currentState.connectivity
         } 
-    };
-    alexaResponse.addContextProperty(targetpointContextProperty);
+    });
 
-
-    var targetpointContextProperty = {
+    alexaResponse.addContextProperty({
         namespace: "Alexa.ThermostatController",
         name: "targetSetpoint",
         value: {
             value: currentState.targetSetpoint.value,
             scale: currentState.targetSetpoint.scale
         }
-    };
-    alexaResponse.addContextProperty(targetpointContextProperty);
+    });
 
-    var targetpointContextProperty = {
+    alexaResponse.addContextProperty({
         namespace: "Alexa.ThermostatController",
         name: "thermostatMode",
         value: currentState.thermostatMode
-    };
-    alexaResponse.addContextProperty(targetpointContextProperty);
+    });
 
-    var targetpointContextProperty = {
+    alexaResponse.addContextProperty({
         namespace: "Alexa.TemperatureSensor",
         name: "temperature",
         value: currentState.temperature
-    };
-    alexaResponse.addContextProperty(targetpointContextProperty);
+    });
 
     return alexaResponse.get();
 }
@@ -461,7 +483,9 @@ async function handleThermostatControl(request, context, endpoint) {
 
         var targetSetpoint = payload.targetSetpoint;
         
-        var shadowState = {
+        validateSetpointIsInAllowedRange(targetSetpoint, endpoint.config.validRange);
+
+        let shadowState = {
             state: {
                 desired: {
                     targetSetpoint: {
@@ -525,7 +549,7 @@ async function handleThermostatControl(request, context, endpoint) {
             scale: currentScale
         };
 
-        var shadowState = {
+        let shadowState = {
             state: {
                 desired: {
                     targetSetpoint: newTargetSetpoint
@@ -540,12 +564,11 @@ async function handleThermostatControl(request, context, endpoint) {
 
         await updateThingShadow(thingName, shadowState);
 
-        var targetpointContextProperty = {
+        alexaResponse.addContextProperty({
             namespace: "Alexa.ThermostatController",
             name: "targetSetpoint",
             value: newTargetSetpoint
-        };
-        alexaResponse.addContextProperty(targetpointContextProperty);
+        });
 
         return alexaResponse.get();
 
@@ -554,7 +577,7 @@ async function handleThermostatControl(request, context, endpoint) {
         
         var thermostatMode = payload.thermostatMode;
 
-        var shadowState = {
+        let shadowState = {
             state: {
                 desired: {
                     thermostatMode: thermostatMode.value
@@ -574,12 +597,12 @@ async function handleThermostatControl(request, context, endpoint) {
         // The not required, it is recommended that *all* properties be reported back, 
         // regardless of whether they were changed. 
         // At the moment, we are only reporting back the changed property.
-        var targetpointContextProperty = {
+        alexaResponse.addContextProperty({
             namespace: "Alexa.ThermostatController",
             name: "thermostatMode",
             value: thermostatMode.value
-        };
-        alexaResponse.addContextProperty(targetpointContextProperty);
+        });
+
         return alexaResponse.get();
     }
     else {
@@ -657,19 +680,24 @@ function sendResponse(response) {
     return response
 }
 
-function sendErrorResponse(type, message) {
+function sendErrorResponse(type, message, additionalPayload) {
     log("Preparing error response to Alexa Cloud...");
+    var payload = {
+        "type": type,
+        "message": message
+    };
+    // Certain Alexa error response types allow or require additional parameters in the payload response
+    if (additionalPayload !== undefined) {
+        payload = { ...payload, ...additionalPayload }
+    }
     var alexaErrorResponse = new AlexaResponse({
         "name": "ErrorResponse",
-        "payload": {
-            "type": type,
-            "message": message
-        }
+        "payload": payload
     });
     return sendResponse(alexaErrorResponse.get());
 }
 
-function AlexaException(name, message) {
+function AlexaException(name, message, additionalPayload) {
     log('Creating handled Alexa exception...');
     // The error name should be one of the Alexa.ErrorResponse interface types:
     // https://developer.amazon.com/docs/device-apis/alexa-errorresponse.html
@@ -678,4 +706,13 @@ function AlexaException(name, message) {
     this.name = name;
     this.message = message;
     this.AlexaError = true;
+    this.additionalPayload = checkValue(additionalPayload, undefined);
+}
+
+function checkValue(value, defaultValue) {
+
+    if (value === undefined || value === {} || value === "") {
+        return defaultValue;
+    }
+    return value;
 }
