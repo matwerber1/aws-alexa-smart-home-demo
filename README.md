@@ -77,7 +77,7 @@ This project aims to quickly give a more realistic, end-to-end smart home skill 
 
 6. OPTIONAL - An [ESP32](https://www.amazon.com/HiLetgo-ESP-WROOM-32-Development-Microcontroller-Integrated/dp/B0718T232Z) with some LEDs and temp/humidity sensor that is linked to your AWS IoT Thing. The LEDs react to commands you give to Alexa and the device sends temp & humidity readings back to the IoT Thing which Alexa can provide to a user upon request. 
 
-In addition to the core components above, a number of helper resources will be created via a CloudFormation template as part of the deployment steps outlined within this guide. 
+In addition to the core components above, a number of helper resources will be created via an [AWS CloudFormation](https://aws.amazon.com/cloudformation/) template as part of the deployment steps outlined within this guide. 
 
 ## Prerequisites
 
@@ -105,7 +105,7 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Cloud an
 
 5. Navigate to [https://developer.amazon.com/settings/console/mycid](https://developer.amazon.com/settings/console/mycid) and copy your **Alexa Vendor ID** into your text editor, along with your Skill ID. 
 
-6. Open **deploy.sh** and enter your Alexa skill ID and vendor ID into their corresponding variables. Note, these values are considered secrets so you would not normally commit these to source in a production environment; you may want to instead want to manage them with a secrets manager like AWS Secrets Manager:
+6. Open **deploy.sh** and enter your Alexa skill ID and vendor ID into their corresponding variables. Note, these values are considered secrets so you would not normally commit these to source in a production environment; you instead may want to manage them with a secrets manager like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/):
 
     ```sh
     # deploy.sh
@@ -113,16 +113,16 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Cloud an
     ALEXA_VENDOR_ID=1234N12341234
     ```
 
-7. Edit **deploy.sh** and set the BUCKET variable to the name of an S3 bucket to use for storing later CloudFormation templates. It's recommend that you leave the **STACK_NAME=** parameter set to **alexa-smart-home-demo** as we will reference this stack name in later steps. 
+7. Edit **deploy.sh** and set the BUCKET variable to the name of a pre-existing S3 bucket to which you have write access. This bucket will store the artifacts used by CloudFormation to launch your stack. It's recommend that you leave the **STACK_NAME=** parameter set to **alexa-smart-home-demo** as we will reference this stack name in later steps. 
 
     ```sh
     # deploy.sh
     BUCKET=your_bucket_name
     ```
 
-8. Install the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html). The SAM CLI is provides several tools that make serverless app development on AWS easy, including the ability to locally test AWS Lambda functions. The specific functionality we will use is SAM's ability to translate and deploy short-hand SAM YAML templates into full-fledged CloudFormation templates. 
+8. Install the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html). The SAM CLI provides several tools that make serverless app development on AWS easy, including the ability to locally test AWS Lambda functions. The specific functionality we will use is SAM's ability to translate and deploy short-hand SAM YAML templates ([see specification here](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md)) into full-fledged CloudFormation templates. 
 
-10. Build and deploy the CloudFormation template by running deploy.sh from the project root:
+10. Build and deploy an AWS CloudFormation stack by running **deploy.sh** from the project root. This stack will create and configure the majority of this project's resources:
 
     ```sh
     $ ./deploy.sh
