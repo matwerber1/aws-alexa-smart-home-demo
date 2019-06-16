@@ -6,8 +6,8 @@ const IOT_ENDPOINT = process.env.IOT_ENDPOINT;
 
 const AlexaResponse = require("./AlexaResponse");
 const discoveryConfig = require ("./discoveryConfig");
-const iotdata = new AWS.IotData({ endpoint: IOT_ENDPOINT });
 const iot = new AWS.Iot();
+const iotdata = new AWS.IotData({ endpoint: IOT_ENDPOINT });
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
 const REQUIRED_PAYLOAD_VERSION = "3";
@@ -36,18 +36,21 @@ exports.handler = async function (request, context) {
 
         // Is this a request to discover available devices?
         if (namespace === 'Alexa.Discovery') {
-            let response = await handleDiscovery(request, context, userId);
+            var response = await handleDiscovery(request, context, userId);
             return sendResponse(response.get());
         }
+        // If this is not a discovery request, it is a directive to do something
+        // to or retrieve info about a specific endpoint. We must verify that
+        // the endpoint exists * and * is mapped to our current user before 
+        // we do anything with it: 
         else {
-            // If this is not a discovery request, it is a directive to do something
-            // to or retrieve info about a specific endpoint. We must verify that
-            // the endpoint exists * and * is mapped to our current user before 
-            // we do anything with it: 
-            await verifyEndpoint(userId, directive.endpoint.endpointId);
+           
+            var endpoint = await verifyEndpointAndGetEndpointDetail(userId, directive.endpoint.endpointId);
     
+            verifyEndpointIsOnline(endpoint);
+
             if (namespace === 'Alexa.ThermostatController') {
-                let response = await handleThermostatControl(request, context);
+                var response = await handleThermostatControl(request, context, endpoint);
                 return sendResponse(response.get());
             }
             else {       
@@ -61,7 +64,7 @@ exports.handler = async function (request, context) {
     catch (err) {
         log(`Error: ${err.name}: ${err.message}`);
         log('Stack:\n' + err.stack);
-        let errorType, errorMessage;
+        var errorType, errorMessage;
 
         // if AlexaError key is present (regardless of value), then we threw
         // an error intentionally and we want to bubble up a specific Alexa
@@ -78,6 +81,31 @@ exports.handler = async function (request, context) {
     }
 
 };
+
+function verifyEndpointIsOnline(endpoint) {
+
+    log('Verifying endpoint is online...');
+    var shadow = endpoint.shadow;
+
+    if (shadow.hasOwnProperty('state') === false) {
+        throw new AlexaException('ENDPOINT_UNREACHABLE', 'Shadow does not contain a state object');
+    }
+
+    if (shadow.state.hasOwnProperty('reported') === false) {
+        throw new AlexaException('ENDPOINT_UNREACHABLE', 'Shadow does not contain a state.reported object');
+    }
+    
+    if (shadow.state.reported.hasOwnProperty('online') === false) {
+        throw new AlexaException('ENDPOINT_UNREACHABLE', 'Shadow does not contain a state.reported.online object');
+    }
+    
+    if (shadow.state.reported.online !== true) {
+        throw new AlexaException('ENDPOINT_UNREACHABLE', `Device unavailable, reported online=${shadow.state.reported.online}`);
+    }
+
+    log('Endpoint is online.');
+
+}
 
 function verifyRequestContainsDirective(request) {
     // Basic error checking to confirm request matches expected format.
@@ -100,7 +128,7 @@ function verifyPayloadVersionIsSupported(payloadVersion) {
     }
 }
 
-async function verifyEndpoint(userId, endpointId) {
+async function verifyEndpointAndGetEndpointDetail(userId, endpointId) {
     /*
     If a directive (other than discovery) is received for a specific endpoint, 
     there are two ways the endpoint may be invalid: Alexa Cloud may think it is
@@ -115,31 +143,8 @@ async function verifyEndpoint(userId, endpointId) {
     impossible (maybe by mistake, or maybe because a device was suspected as being
     compromised and we want to remove it from service?).
     */
-    try {
-        // The IoT describeThing() API will throw an error if the given thing
-        // name does not exist, so we must wrap in a try/catch block.
-        console.log('Verifying existence of endpoint in AWS IoT Registry...');
-        let params = {
-            thingName: endpointId
-        };
-        log('Calling iot.describeThing() with params:', params);
-        let iotDescription = await iot.describeThing(params).promise();
-        log("Endpoint exists in Iot Registry:\n" + JSON.stringify(iotDescription));
-    }
-    catch (err) {
-        if (err.name === "ResourceNotFoundException") {
-            throw new AlexaException(
-                'NO_SUCH_ENDPOINT',
-                'Endpoint ID does not exist as Thing Name in AWS IoT Registry'
-            );
-        }
-        else {
-            // If it's not a ResourceNotFound error, then it is an unexpected
-            // error and we simply pass it upstream to our main error handler.
-            throw(err); 
-        }
-    }
-
+    
+    // First, let's see if device is mapped to our user in DynamoDB:
     log('Verifying that endpoint is mapped to the user invoking the skill...')
     var params = {
         Key: {
@@ -160,6 +165,47 @@ async function verifyEndpoint(userId, endpointId) {
             'Endpoint ID exists in AWS IoT Registry but is not mapped to this user in DynamoDB'
         );
     }
+
+    // Now, let's see if the device actually exists in the Iot Core registry.
+    // If it does exist, we will populate our response with the IoT thing details
+    // and current reported shadow state. 
+    var endpoint = {};    
+    try {
+        // The IoT describeThing() API will throw an error if the given thing
+        // name does not exist, so we must wrap in a try/catch block.
+        console.log('Verifying existence of endpoint in AWS IoT Registry...');
+        var params = {
+            thingName: endpointId
+        };
+        log('Calling iot.describeThing() with params:', params);
+        endpoint = await iot.describeThing(params).promise();
+        log("Endpoint exists in Iot Registry");
+        endpoint.config = getDeviceConfigFromIotThingAttributes(endpoint.attributes);
+        
+        // Endpoint ID is core concept when dealing with the Alexa Smart Home API;
+        // We happen to use the IoT Registry's thingName as our endpointID, but
+        // its possible other implementations may use a different value for the
+        // endpoint ID. So, rather than let all later code refer to "thingName",
+        // I'd rather explicitly create an endpointId key. That way, it's easier
+        // to drop in a different value if you prefer not to use the IoT thing name.
+        endpoint.endpointId = endpoint.thingName;
+        endpoint.shadow = await getDeviceShadow(endpoint.thingName);
+        log('Full endpoint detail:', endpoint);
+    }
+    catch (err) {
+        if (err.name === "ResourceNotFoundException") {
+            throw new AlexaException(
+                'NO_SUCH_ENDPOINT',
+                'Endpoint ID does not exist as Thing Name in AWS IoT Registry'
+            );
+        }
+        else {
+            // If it's not a ResourceNotFound error, then it is an unexpected
+            // error and we simply pass it upstream to our main error handler.
+            throw(err); 
+        }
+    }
+    return endpoint;
 }
 
 async function handleDiscovery(request, context, userId) {
@@ -167,7 +213,7 @@ async function handleDiscovery(request, context, userId) {
     try {
         log("Calling handleDiscovery()");
     
-        let alexaResponse = new AlexaResponse({
+        var alexaResponse = new AlexaResponse({
             "namespace": "Alexa.Discovery",
             "name": "Discover.Response"
         });
@@ -210,10 +256,11 @@ async function verifyAuthTokenAndGetUserId(namespace, directive, ignoreExpiredTo
             Payload: JSON.stringify({ token: encodedAuthToken })
         };
     
-        let response = await lambda.invoke(params).promise();
+        log('Calling lambda.invoke() with params:', params);
+        var response = await lambda.invoke(params).promise();
 
         if (response.hasOwnProperty('FunctionError')) {
-            let authError = JSON.parse(authResponse.Payload);
+            var authError = JSON.parse(authResponse.Payload);
             if (authError.errorMessage === 'Token is expired'
                  && ignoreExpiredToken === true) {
                 throw new AlexaException(
@@ -261,8 +308,8 @@ async function getUserEndpoints(userId) {
         Payload: payload
     };
 
-    log("Invoking Lambda: ", params);
-    let getUserDevicesResponse = await lambda.invoke(params).promise();
+    log("Invoking Lambda with params: ", params);
+    var getUserDevicesResponse = await lambda.invoke(params).promise();
 
     log("User Device Lambda response: ", getUserDevicesResponse);
     var devices = (JSON.parse(getUserDevicesResponse.Payload)).deviceList;
@@ -274,19 +321,20 @@ async function getUserEndpoints(userId) {
         }
     */
 
-    let endpoints = [];
+    var endpoints = [];
 
     for (const device of devices) {
-        let params = {
+        var params = {
             thingName: device.thingName
         };
 
         log("Calling IoT.describeThing() with params: ", params);
-        let iotDescription = await iot.describeThing(params).promise();
+        var iotDescription = await iot.describeThing(params).promise();
+        var iotAttributes = iotDescription.attributes;
         log("IoT Description:\n", iotDescription);
-        let thingConfig = discoveryConfig[iotDescription.attributes.modelNumber][iotDescription.attributes.firmwareVersion];
+        var thingConfig = getDeviceConfigFromIotThingAttributes(iotAttributes);
 
-        let endpoint = {
+        var endpoint = {
             endpointId: device.thingName,
             manufacturerName: thingConfig.manufacturerName,
             friendlyName: thingConfig.friendlyName,
@@ -301,6 +349,10 @@ async function getUserEndpoints(userId) {
     return endpoints;
 }
 
+function getDeviceConfigFromIotThingAttributes(attributes) {
+    return discoveryConfig[attributes.modelNumber][attributes.firmwareVersion];
+}
+
 function log(message1, message2) {
     if (message2 == null) {
         console.log(message1);
@@ -309,7 +361,7 @@ function log(message1, message2) {
     }
 }
 
-async function handleThermostatControl(request, context) {
+async function handleThermostatControl(request, context, endpoint) {
     /*  This function handles all requests that Alexa identifies as being a 
         "ThermostatController" directive, such as:
           - Turn device to cool mode
@@ -318,12 +370,14 @@ async function handleThermostatControl(request, context) {
           - Decrease device temperature
           - Set temperature to X degrees
     */
-    let endpointId = request.directive.endpoint.endpointId;
-    let token = request.directive.endpoint.scope.token;
-    let correlationToken = request.directive.header.correlationToken;
-    let requestMethod = request.directive.header.name; 
+    var endpointId = endpoint.endpointId;
+    var thingName = endpoint.thingName;
+    var token = request.directive.endpoint.scope.token;
+    var correlationToken = request.directive.header.correlationToken;
+    var requestMethod = request.directive.header.name; 
+    var payload = request.directive.payload;
 
-    let alexaResponse = new AlexaResponse(
+    var alexaResponse = new AlexaResponse(
         {
             "correlationToken": correlationToken,
             "token": token,
@@ -334,53 +388,111 @@ async function handleThermostatControl(request, context) {
     log(`Running ThermostatControl handler for ${requestMethod} method`);
 
     if (requestMethod === 'SetTargetTemperature') {
-        
-        // TODO - update the device shadow's desired state
 
-        let targetpointContextProperty = {
-            namespace: "Alexa.ThermostatController",
-            name: "targetSetpoint",
-            value: {
-                value: request.directive.payload.targetSetpoint.value,
-                scale: request.directive.payload.targetSetpoint.scale
+        var targetSetpoint = payload.targetSetpoint;
+        
+        var shadowState = {
+            state: {
+                desired: {
+                    targetSetpoint: {
+                        value: targetSetpoint.value,
+                        scale: targetSetpoint.scale
+                    }
+                }
             }
         };
 
+        await updateThingShadow(thingName, shadowState);
+
+        var targetpointContextProperty = {
+            namespace: "Alexa.ThermostatController",
+            name: "targetSetpoint",
+            value: {
+                value: targetSetpoint.value,
+                scale: targetSetpoint.scale
+            }
+        };
         alexaResponse.addContextProperty(targetpointContextProperty);
+        return alexaResponse.get();
+
+    }
+    else if (requestMethod === 'AdjustTargetTemperature') {
+
+        var currentSetpoint = endpoint.shadow.state.reported.targetSetpoint;
+        var currentValue = currentSetpoint.value;
+        var currentScale = currentSetpoint.scale;
+        
+        var targetSetpointDelta = payload.targetSetpointDelta;
+        var deltaValue = targetSetpointDelta.value;
+        var deltaScale = targetSetpointDelta.scale;
+
+        log('Current setpoint:', currentSetpoint);
+        log('Target delta:', targetSetpointDelta);
+
+        // It's possible that the requested temperature change is in a different
+        // scale from that being used/reported by the device. In such a case, 
+        // the Alexa guide states we should report the new adjusted value in the
+        // device's scale. When the scales are different, we must convert the
+        // current temperature to the scale of the requested delta in order to
+        // add (or subtract) the delta from the current temperature to arrive
+        // at the new desired temperature. Then, we must convert this new value
+        // back to the temp scale currently in use by the device. If the current
+        // and delta scales are the same (e.g. both Fahrenheit or both Celsius),
+        // then the convertTemperature() function simply returns the same value
+        // it was provided, without modification. 
+        // https://developer.amazon.com/docs/device-apis/alexa-thermostatcontroller.html#adjusttargettemperature-directive
+        var currentValueInDeltaScale = convertTemperature(currentValue, currentScale, deltaScale);
+        var newValueInDeltaScale = currentValueInDeltaScale + deltaValue;
+        var newValueInCurrentScale = convertTemperature(newValueInDeltaScale, deltaScale, currentScale);
+
+        var newTargetSetpoint = {
+            value: newValueInCurrentScale,
+            scale: currentScale
+        };
+
+        var shadowState = {
+            state: {
+                desired: {
+                    targetSetpoint: newTargetSetpoint
+                }
+            }
+        };
+
+        await updateThingShadow(thingName, shadowState);
+
+        var targetpointContextProperty = {
+            namespace: "Alexa.ThermostatController",
+            name: "targetSetpoint",
+            value: newTargetSetpoint
+        };
+        alexaResponse.addContextProperty(targetpointContextProperty);
+
         return alexaResponse.get();
 
     }
     else if (requestMethod === 'SetThermostatMode') {
         
+        var thermostatMode = payload.thermostatMode;
+
         var shadowState = {
             state: {
                 desired: {
-                    mode: request.directive.payload.thermostatMode.value
+                    thermostatMode: thermostatMode.value
                 }
             }
-        }
-
-        var params = {
-            payload: JSON.stringify(shadowState) /* Strings will be Base-64 encoded on your behalf */, /* required */
-            thingName: endpointId /* required */
         };
 
-        // Updating shadow updates our *control plane*, but it doesn't necessarily
-        // mean our device state has changed. The device is responsible for monitoring
-        // the device shadow and responding to changes in desired states. 
-        log(`Updating desired shadow state of IoT Thing ${endpointId}...:\n`, shadowState);
-        var updateShadowResponse = await iotdata.updateThingShadow(params).promise();
-        log(`Shadow update response:\n`, JSON.parse(updateShadowResponse.payload));
-        
+        await updateThingShadow(thingName, shadowState);
+
         // Context properties are how we affirmatively tell Alexa that the state
         // of our device after we have successfully completed the requested changes.
         // The not required, it is recommended that *all* properties be reported back, 
         // regardless of whether they were changed. 
         // At the moment, we are only reporting back the changed property.
-        let targetpointContextProperty = {
+        var targetpointContextProperty = {
             namespace: "Alexa.ThermostatController",
             name: "thermostatMode",
-            value: request.directive.payload.thermostatMode.value
+            value: thermostatMode.value
         };
         alexaResponse.addContextProperty(targetpointContextProperty);
         return alexaResponse.get();
@@ -394,6 +506,67 @@ async function handleThermostatControl(request, context) {
     }    
 }
 
+function convertTemperature(temperature, currentScale, desiredScale) {
+    if (currentScale === desiredScale) {
+        return temperature;
+    }
+    else if (currentScale === 'FAHRENHEIT' && desiredScale === 'CELSIUS') {
+        return convertFahrenheitToCelsius(temperature);
+    }
+    else if (currentScale === 'CELSIUS' && desiredScale === 'FAHRENHEIT') {
+        return convertCelsiusToFahrenheit(temperature);
+    }
+    else {
+        throw (`Unable to convert ${currentScale} to ${desiredScale}, unsupported temp scale.`);
+    }
+    
+}
+
+function convertCelsiusToFahrenheit(celsius) {
+    var fahrenheit = Math.round((celsius * 1.8) + 32);
+    log(`Converted temperature to ${fahrenheit} FAHRENHEIT.`);
+    return fahrenheit;
+}
+
+function convertFahrenheitToCelsius(fahrenheit) {
+    var celsius = Math.round((fahrenheit - 32) * 0.556);
+    log(`Converted temperature to ${celsius} CELSIUS.`);
+    return celsius;
+}
+
+async function getDeviceShadow(thingName) {
+    // Get the device's reported state per the state.reported object of the
+    // corresponding IoT thing's device shadow.
+    var params = {
+        thingName: thingName
+    };
+    log('Calling iotdata.getThingShadow() with params:', params);
+    var response = await iotdata.getThingShadow(params).promise();
+    var shadow = JSON.parse(response.payload);
+    log('getThingShadow() response:', shadow);
+    return shadow;
+    
+}
+
+async function updateThingShadow(thingName, shadowState) {
+    try {
+        var params = {
+            payload: JSON.stringify(shadowState) /* Strings will be Base-64 encoded on your behalf */, /* required */
+            thingName: thingName /* required */
+        };
+        // Updating shadow updates our *control plane*, but it doesn't necessarily
+        // mean our device state has changed. The device is responsible for monitoring
+        // the device shadow and responding to changes in desired states. 
+        log(`Calling iotdata.updateThingShadow() with params:`, params);
+        var updateShadowResponse = await iotdata.updateThingShadow(params).promise();
+        log(`Shadow update response:\n`, JSON.parse(updateShadowResponse.payload));    
+    }
+    catch (err) {
+        console.log('Error: unable to update device shadow:', err);
+        throw (err);
+    }
+}
+
 function sendResponse(response) {
     log("Lambda response to Alexa Cloud:\n", response);
     return response
@@ -401,7 +574,7 @@ function sendResponse(response) {
 
 function sendErrorResponse(type, message) {
     log("Preparing error response to Alexa Cloud...");
-    let alexaErrorResponse = new AlexaResponse({
+    var alexaErrorResponse = new AlexaResponse({
         "name": "ErrorResponse",
         "payload": {
             "type": type,

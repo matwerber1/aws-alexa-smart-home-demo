@@ -41,7 +41,8 @@ const discoveryConfig = {
                             {
                                 name: 'targetSetpointDelta'
                             }
-                        ]
+                        ],
+                        retrievable: true
                     },
                     configuration: {
                         supportsScheduling: false, 
