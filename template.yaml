@@ -20,11 +20,12 @@ Parameters:
   AlexaSkillId:
     Type: String
     Description: Your Alexa Skill ID as shown from the Alexa Developer Console
-    
+    NoEcho: true
+
   AlexaVendorId:
     Type: String
     Description: Your Alexa Vendor ID as shown from the Alexa Developer Console
-    
+    NoEcho: true
 
 Globals:
   Function:
@@ -37,17 +38,6 @@ Globals:
         STACK_NAME: !Ref AWS::StackName
 
 Resources:
-
-  AlexaSkillIdSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties: 
-      Description: ID of your Alexa skill as shown in the Alexa Developer Console (https://developer.amazon.com/alexa/console/ask)
-      SecretString: 
-        # Note - To improve security, you should manually (via console or API)
-        # update this secret's value directly in Secrets Manager with the
-        # actual value from the Alexa Developer Console rather than hard-coding
-        # it directly in this CloudFormation template.
-        "{\"SkillId\":\"YOUR_SKILL_ID\", \"VendorId\":\"YOUR_VENDOR_ID\", \"CustomerId\":\"YOUR_CUSTOMER_ID\"}"
 
   ##############################################################################
   CloudFormationResponseLayer:

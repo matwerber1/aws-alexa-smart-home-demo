@@ -42,18 +42,18 @@ This project provides a demo of the [Alexa Smart Home Skill Kit API](https://dev
 A basic workflow might look like this: 
 
 1. Customer purchases a smart home device
-2. Customer registers the smart home device with manufacturer's backend cloud service; registration typically occurs using a web or mobile app provided by the manufacturer (*not* the Alexa web or mobile app)
-3. Customer registers Alexa Smart Home skill with their existing Alexa-enabled device using the Alexa mobile or web app
+2. Customer registers the smart home device with the manufacturer's backend cloud service; registration typically occurs using a web or mobile app provided created & hosted by the manufacturer
+3. Customer registers to use the manufacturer's Alexa smart home skill with the customer's existing Alexa-enabled device (e.g. Echo, FireTV, Alexa mobile app, Alexa web app, etc.)
 4. Customer tells Alexa to "discover devices"
-5. Alexa Cloud invokes Lambda function in manufacturer's AWS account
-7. Manufacturer's Lambda function looks up device(s) registered to the customer (from Step 2) and returns list of registered devices to Alexa Cloud
-6. Alexa Cloud now knows which smart home devices are available for interaction and shows those devices in the customer's Alexa mobile or web app (or speaks them via voice)
-7. Customer issues voice commands to Alexa to control their registered smart home device
-8. Alexa Cloud forwards command to manufacturer's Lambda function
-9. Manufacturer's Lambda function sends commands or gather's information to the smart home device; exact logic of how this occurs is responsibility of the manufacturer.
-10. Manufacturer's Lambda function sends a response to Alexa Cloud service indicating whether the command was successful or not
-11. Alexa Cloud forwards response to customer's Alexa device
-12. Customer's Alexa device voices response to the customer
+5. Alexa Cloud invokes the skill's Lambda function in the manufacturer's AWS account
+7. Lambda function looks up device(s) registered to the customer (from Step 2) and returns list of registered devices to the Alexa Cloud
+6. Alexa Cloud now knows which smart home devices are available for interaction and shows those devices in the customer's Alexa mobile/web app or verbally informs the customer that of the discovered device via speaker (e.g. Echo) or TV (e.g. FireTV)
+7. Customer gives commands to their Alexa-enabled device/app to interact with their smart home device which are forwarded to the ALexa Cloud
+8. Alexa Cloud forwards the customer commands to the skill's Lambda function in the manufacturer's account
+9. Lambda function interacts with the smart home device over the internet (e.g. sends commands and/or gathers info)
+10. Lambda function sends a response to Alexa Cloud indcating that the command was successful and/or providing the customer's requested information
+11. Alexa Cloud forwards response to customer's Alexa device/app
+12. Customer's Alexa device/app shares results with the customer
 
 In the above workflow, the customer uses an Alexa-enabled device for voice interaction with their smart home device. However, the customer is free to also use the Alexa web or mobile app to accomplish the same results.
 
