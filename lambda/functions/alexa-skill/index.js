@@ -24,6 +24,7 @@ exports.handler = async function (request, context) {
         var directive = request.directive;
         var header = directive.header;
         var namespace = header.namespace; 
+        var name = header.name;
         var ignoreExpiredToken = request.ignoreExpiredToken || false;   // True for debugging purposes, if we're using an old token
 
         verifyPayloadVersionIsSupported(header.payloadVersion);
@@ -53,10 +54,14 @@ exports.handler = async function (request, context) {
                 var response = await handleThermostatControl(request, context, endpoint);
                 return sendResponse(response.get());
             }
+            else if (namespace === 'Alexa' && name === 'ReportState') {
+                var response = await handleReportState(request, context, endpoint);
+                return sendResponse(response.get());
+            }
             else {       
                 throw new AlexaException(
                     'INVALID_DIRECTIVE', 
-                    `Namespace ${namespace} is unsupported by this skill.`
+                    `Namespace ${namespace} with name ${name} is unsupported by this skill.`
                 );
             }
         }
@@ -359,6 +364,64 @@ function log(message1, message2) {
     } else {
         console.log(message1 + JSON.stringify(message2, null, 2));
     }
+}
+
+async function handleReportState(request, context, endpoint) {
+    
+    log('Gathering state from IoT Thing shadow to report back to Alexa...');
+
+    var endpointId = endpoint.endpointId;
+    var token = request.directive.endpoint.scope.token;
+    var correlationToken = request.directive.header.correlationToken;
+    var currentState = endpoint.shadow.state.reported;    
+    
+    // Basic response header
+    var alexaResponse = new AlexaResponse(
+        {
+            "name": 'StateReport',
+            "correlationToken": correlationToken,
+            "token": token,
+            "endpointId": endpointId
+        }
+    );
+
+    // Gather current properties and add to our response
+
+    var targetpointContextProperty = {
+        namespace: "Alexa.EndpointHealth",
+        name: "connectivity",
+        value: {
+            value: currentState.connectivity
+        } 
+    };
+    alexaResponse.addContextProperty(targetpointContextProperty);
+
+
+    var targetpointContextProperty = {
+        namespace: "Alexa.ThermostatController",
+        name: "targetSetpoint",
+        value: {
+            value: currentState.targetSetpoint.value,
+            scale: currentState.targetSetpoint.scale
+        }
+    };
+    alexaResponse.addContextProperty(targetpointContextProperty);
+
+    var targetpointContextProperty = {
+        namespace: "Alexa.ThermostatController",
+        name: "thermostatMode",
+        value: currentState.thermostatMode
+    };
+    alexaResponse.addContextProperty(targetpointContextProperty);
+
+    var targetpointContextProperty = {
+        namespace: "Alexa.TemperatureSensor",
+        name: "temperature",
+        value: currentState.temperature
+    };
+    alexaResponse.addContextProperty(targetpointContextProperty);
+
+    return alexaResponse.get();
 }
 
 async function handleThermostatControl(request, context, endpoint) {

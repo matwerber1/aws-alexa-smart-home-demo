@@ -16,7 +16,9 @@ const discoveryConfig = {
             friendlyName: 'Smart Device',
             description: 'My SmartHome Product!',
             displayCategories: [
-                - 'OTHER'
+                'OTHER', 
+                'THERMOSTAT',
+                'TEMPERATURE_SENSOR'
             ],
             capabilities: [
                 {
@@ -25,6 +27,32 @@ const discoveryConfig = {
                     type: 'AlexaInterface',
                     interface: 'Alexa',
                     version: '3'
+                },
+                {
+                    type: "AlexaInterface",
+                    interface: "Alexa.EndpointHealth",
+                    "version":"3",
+                    properties: {
+                        supported: [
+                          {
+                             name: "connectivity"
+                          }
+                       ],
+                       retrievable: true
+                    }
+                },
+                {
+                    type: "AlexaInterface",
+                    interface: "Alexa.TemperatureSensor",
+                    version: "3",
+                    properties: {
+                        supported: [
+                            {
+                                "name": "temperature"
+                            }
+                        ],
+                        retrievable: true
+                    }
                 },
                 {
                     type: 'AlexaInterface',

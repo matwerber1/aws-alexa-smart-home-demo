@@ -1,0 +1,21 @@
+{  
+    "reported":{  
+       "temperature":{  
+          "value":45,
+          "scale":"CELSIUS"
+       },
+       "humidity":53,
+       "targetSetpoint":{  
+          "value":40,
+          "scale":"CELSIUS"
+       },
+       "connectivity":"OK",
+       "thermostatMode":"HEAT"
+    },
+    "delta":{  
+       "targetSetpoint":{  
+          "scale":"FAHRENHEIT",
+          "value":103
+       }
+    }
+ }
