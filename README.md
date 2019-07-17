@@ -1,10 +1,23 @@
-# **Note: this is a work in process, not yet completed**
+# aws-alexa-smart-home-demo
+
+**Note: this is a work in process, not yet completed**
 
 Some components are not yet functional and/or in early draft stage. 
 
-# aws-alexa-smart-home-demo
+##### Table of Contents  
 
-## Smart Home Background
+* [Smart Homes](#Smart-Homes)  
+* [Alexa Smart Home Devices](#Alexa-Smart-Home-Devices)  
+* [Alexa Skill Workflow](#Alexa-Skill-Workflow)
+* [Project Overview](#Project-Overview)
+* [Prerequisites](#Prerequisites)
+* [Getting Started](#Getting-Started)
+
+    * [Create Alexa Skill and Cloud Backend](#Create-Alexa-Skill-and-Cloud-Backend)
+
+    * [Sign up to use your skill](#Sign-up-to-use-your-skill)
+
+## Smart Homes
 
 Before we begin with this Alexa Smart Home-focused demo, let's understand the basic smart home interaction model. We'll do so by working backwards from your customer's experience. 
 
@@ -14,7 +27,8 @@ From there, your customer may interact locally with the device in a number of wa
 
 But what makes the device a "smart home device"? Definitions vary, and we won't get caught up in semantics... but this author argues that it's typically something in the home that supports your customer's daily activities, is easy to interact with, and has internet connectivity that enables things such as information exchange, interaction with other remote devices, remote monitoring, and/or remote control.
 
-## Alexa and Smart Home Devices
+
+## Alexa Smart Home Devices
 
 [Alexa](https://developer.amazon.com/alexa) is Amazon's cloud-based voice service available on over 100 million devices from Amazon and third-party device manufacturers. With Alexa, you can build natural voice experiences that offer customers a more intuitive way to interact with their smart home devices that they use every day.
 
@@ -37,7 +51,8 @@ The difference is that the skill kits provide pre-defined request/response model
 
 This project provides a demo of the [Alexa Smart Home Skill Kit API](https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html). 
 
-## Alexa Smart Home Skill Workflow
+
+## Alexa Skill Workflow
 
 A basic workflow might look like this: 
 
@@ -87,7 +102,7 @@ In addition to the core components above, a number of helper resources will be c
 
 ## Getting Started
 
-### Create Alexa Skill and Backend Cloud Infrastructure
+### Create Alexa Skill and Cloud Backend
 
 First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Cloud and our smart home application infrastructure in our AWS account. We connect the two components by giving the Alexa Cloud permission to invoke a Lambda function within our AWS account and by giving the Lambda function permission to send responses to our skill in the Alexa Cloud:
 
@@ -151,7 +166,7 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Cloud an
         7. Leave **Domain List** and **Default Access Token Expiration Time** blank. 
         8. Click Save.
 
-### Sign up for your skill
+### Sign up to use your skill
 
 Now that our skill and backend cloud infrastructure exists, we can now sign up to use the skill:
 
