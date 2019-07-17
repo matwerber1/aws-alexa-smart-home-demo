@@ -15,6 +15,7 @@ Some components are not yet functional and/or in early draft stage.
     * [Create Alexa Skill and Cloud Backend](#Create-Alexa-Skill-and-Cloud-Backend)
     * [Sign up to use your skill](#Sign-up-to-use-your-skill)
     * [Set up your ESP32](#Set-up-your-ESP32)
+    * [Test your ESP32 smart thermostat](#Test-your-ESP32-smart-thermostat)
 
 ## Smart Homes
 
@@ -242,17 +243,19 @@ We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-so
 
 9. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
 
-10. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter UsePhysicalDevice to have a value of `true`; deploy your updated stack. 
+### Test your ESP32 smart thermostat
 
-11. Within AWS IoT, open the device shadow of your smart home's AWS Thing in the device registry and view the device shadow. 
+1. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter UsePhysicalDevice to have a value of `true`; deploy your updated stack. 
 
-12. Notice that the device is updated the reported state's temperature, humidity, and up-time.
+2. Within AWS IoT, open the device shadow of your smart home's AWS Thing in the device registry and view the device shadow. 
 
-13. Press the thermostat mode button on the ESP32 and notice that the mode (via red and blue LEDs) changes on the device and that the reported state changes in the IoT shadow. 
+3. Notice that the device is updated the reported state's temperature, humidity, and up-time.
 
-14. Manually edit the IoT device shadow by adding the following section to the shadow document:
+4. Press the thermostat mode button on the ESP32 and notice that the mode (via red and blue LEDs) changes on the device and that the reported state changes in the IoT shadow. 
 
-    * Note - replace "COOL" with either "HEAT" or "OFF", if your device is already in COOL mode
+5. Manually edit the IoT device shadow by adding the following section to the shadow document:
+
+    Note - replace "COOL" with either "HEAT" or "OFF", if your device is already in COOL mode
 
     ```
     "desired": {
@@ -262,7 +265,7 @@ We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-so
 
     Save the changes and notice within the MOS terminal that the device received a message on the shadow/update MQTT topic that there is a difference between the device's reported and desired state. Note that the device then updates the device's reported state and publishes this new state to the AWS IoT shadow. 
 
-15. Now, the fun part! Talk to your Alexa device and test any of the following directives:
+6. Now, the fun part! Talk to your Alexa device and test any of the following directives:
 
     * "Alexa, set thermostat to COOL"
     * "Alexa, set thermostat to OFF"
