@@ -12,9 +12,7 @@ Some components are not yet functional and/or in early draft stage.
 * [Project Overview](#Project-Overview)
 * [Prerequisites](#Prerequisites)
 * [Getting Started](#Getting-Started)
-
     * [Create Alexa Skill and Cloud Backend](#Create-Alexa-Skill-and-Cloud-Backend)
-
     * [Sign up to use your skill](#Sign-up-to-use-your-skill)
 
 ## Smart Homes
