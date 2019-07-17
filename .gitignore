@@ -1,7 +1,6 @@
 packaged.yaml
 alexa
 node_modules/
-esp32/
 mydeploy.sh
 package-lock.json
 package.json
