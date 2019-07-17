@@ -4,6 +4,8 @@ const AWS = require("aws-sdk");
 const GET_DEVICES_BY_USER_FUNCTION = process.env.GET_DEVICES_BY_USER_FUNCTION;
 const VERIFY_COGNITO_TOKEN_FUNCTION = process.env.VERIFY_COGNITO_TOKEN_FUNCTION;
 const IOT_ENDPOINT = process.env.IOT_ENDPOINT;
+const DEVICE_TABLE_NAME = process.env.DEVICE_TABLE;
+const USE_PHYSICAL_DEVICE = process.env.USE_PHYSICAL_DEVICE;
 
 const AlexaResponse = require("./AlexaResponse");
 const discoveryConfig = require ("./discoveryConfig");
@@ -12,14 +14,13 @@ const iotdata = new AWS.IotData({ endpoint: IOT_ENDPOINT });
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
 const REQUIRED_PAYLOAD_VERSION = "3";
-const DEVICE_TABLE_NAME = process.env.DEVICE_TABLE;
 
 // For debugging / test purposes if you do not have a physical device linked to
 // your Thing in the IoT Core Registry, set the value below to true; this will
 // copy your desired state changes to the reported state changes. Normally, 
 // only the physical device would update reported state. If using a physical device,
 // set the value below to false:
-const copyDesiredStateToReportedStateInShadow = false;
+const copyDesiredStateToReportedStateInShadow = !(USE_PHYSICAL_DEVICE);
 
 exports.handler = async function (request, context) {
 

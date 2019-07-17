@@ -14,6 +14,7 @@ Some components are not yet functional and/or in early draft stage.
 * [Getting Started](#Getting-Started)
     * [Create Alexa Skill and Cloud Backend](#Create-Alexa-Skill-and-Cloud-Backend)
     * [Sign up to use your skill](#Sign-up-to-use-your-skill)
+    * [Set up your ESP32](#Set-up-your-ESP32)
 
 ## Smart Homes
 
@@ -205,3 +206,66 @@ Now that our skill and backend cloud infrastructure exists, we can now sign up t
 10. Click **Discover Devices** to have the Alexa Cloud invoke your skill's Lambda function to search for and tell Alexa which device(s) are registered to your account: 
 
     <img src="./images/register-9.PNG" width="25%" border="1" style="border-color: black">
+
+### Set up your ESP32
+
+In this optional section, we will walk through configuring an ESP32 as follows:
+
+    * Red and blue LED used to indicate that thermostat is in HEAT or COOL mode, respectively
+    * White LED to indicate that the device is successfully connected to your AWS IoT Core cloud backend
+    * DHT11 temp/humidity sensor from which the device will take readings and send to AWS IoT
+    * A push-botton to allow the user to physically change the thermostat between HEAT, COOL, and OFF
+
+We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-source IoT operating system. Mongoose OS (MOS) supports C/C++ and Javascript. We will be using the Javascript version in this demo.  
+
+1. Follow steps 1 through 3 in the [Download and install the MOS tool] guide. 
+
+2. As a test, also follow steps 4 through 7 in the MOS guide above to confirm you can successfully connect to and flash your ESP32.
+
+    * Note - if using a Mac, some additional drivers / troubleshooting may be needed to things working. Pay careful attention to the guide. 
+
+    * <mark>Important</mark> - After many hours of troubleshooting, I learned that not all USB cables are created equally :(. Some can only carry power to the ESP32, while others enable data connectivity. You will need the latter. [See this post](https://electronics.stackexchange.com/questions/140225/how-can-i-tell-charge-only-usb-cables-from-usb-data-cables) for additional information. 
+
+3. If you've successfully flashed your ESP32 and confirmed its sending messages to the MOS console on your computer, you're ready to proceed!
+
+4. TODO: add instructions to connect your ESP32, LEDs, temp sensor, and button as follows:
+
+    * 
+
+5. TODO: add instructions to create/generate device certs for your IoT thing and download locally. 
+
+6. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
+
+7. TODO: add instructions to copy certs to ESP32 (if not already part of the flash)
+
+8. TODO: add instructions to configure WIFI for the ESP32
+
+9. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
+
+10. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter UsePhysicalDevice to have a value of `true`; deploy your updated stack. 
+
+11. Within AWS IoT, open the device shadow of your smart home's AWS Thing in the device registry and view the device shadow. 
+
+12. Notice that the device is updated the reported state's temperature, humidity, and up-time.
+
+13. Press the thermostat mode button on the ESP32 and notice that the mode (via red and blue LEDs) changes on the device and that the reported state changes in the IoT shadow. 
+
+14. Manually edit the IoT device shadow by adding the following section to the shadow document:
+
+    * Note - replace "COOL" with either "HEAT" or "OFF", if your device is already in COOL mode
+
+    ```
+    "desired": {
+        thermostatMode: "COOL"
+    }
+    ```
+
+    Save the changes and notice within the MOS terminal that the device received a message on the shadow/update MQTT topic that there is a difference between the device's reported and desired state. Note that the device then updates the device's reported state and publishes this new state to the AWS IoT shadow. 
+
+15. Now, the fun part! Talk to your Alexa device and test any of the following directives:
+
+    * "Alexa, set thermostat to COOL"
+    * "Alexa, set thermostat to OFF"
+    * "Alexa, what is the thermostat temperature?"
+    * "Alexa, set the thermostat to 65 degrees"
+    * "Aelxa, set increase the thermostat temperature"

@@ -17,6 +17,14 @@ Description: >
 #    !Not [ !Equals [ !FindInMap [ Config, ForceUpdate, UpdateString ], do_not_update ] ]
 
 Parameters:
+  UsePhysicalDevice:
+    Type: String
+    AllowedValues: 
+      - "true"
+      - "false"
+    Description: Will a physical device (i.e. ESP32) be used for your thermostat?
+    Default: "false"
+
   AlexaSkillId:
     Type: String
     Description: Your Alexa Skill ID as shown from the Alexa Developer Console
@@ -306,6 +314,7 @@ Resources:
           GET_DEVICES_BY_USER_FUNCTION: !Ref GetDevicesByUserFunction
           VERIFY_COGNITO_TOKEN_FUNCTION: !Ref VerifyCognitoTokenFunction
           IOT_ENDPOINT: !GetAtt IotEndpoint.IotEndpointAddress
+          USE_PHYSICAL_DEVICE: !Ref UsePhysicalDevice
       Policies:
         - Statement:
           - 
