@@ -1,0 +1,43 @@
+{
+    "deviceType": "Smart Home Device",
+    "manufacturerName": "Smarthome Products, Inc.",
+    "modelName": "model 1",
+    "friendlyName": "Smart Device",
+    "description": "Super cool smart home product",
+    "displayCategories": [
+      "OTHER"
+    ],
+    "capabilities": [
+      {
+        "type": "AlexaInterface",
+        "interface": "Alexa.ThermostatController",
+        "version": "3",
+        "configuration": {
+            "supportsScheduling": false,
+            "supportedModes": [
+                "HEAT",
+                "COOL",
+                "OFF"
+            ],
+            "properties": {
+                "supported": [
+                    {
+                        "name": "targetSetpoint"
+                    },
+                    {
+                        "name": "thermostatMode"
+                    },
+                    {
+                        "name": "targetSetpointDelta"
+                    }
+                ]
+            }
+        }
+      },
+      {
+        "type": "AlexaInterface",
+        "interface": "Alexa",
+        "version": "3"
+      }
+    ]
+  }

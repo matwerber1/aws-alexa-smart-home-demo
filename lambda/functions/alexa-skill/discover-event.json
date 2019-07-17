@@ -1,0 +1,16 @@
+{
+    "directive": {
+      "header": {
+        "namespace": "Alexa.Discovery",
+        "name": "Discover",
+        "payloadVersion": "3",
+        "messageId": "1bd5d003-31b9-476f-ad03-71d471922820"
+      },
+      "payload": {
+        "scope": {
+          "type": "BearerToken",
+          "token": "eyJraWQiOiJVbSszRHY1bENkVDZsNWNHRE5QWUVkZVZpOU5qTWx2SzlRV0FXNVRFZURBPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJiN2E0NmE4Mi04MTc3LTQwNDMtOWZjOS04NjA5ZGU1MTI5MjgiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6InBob25lIG9wZW5pZCIsImF1dGhfdGltZSI6MTU1NzgwMjgxNCwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfUlVhbEY3MlBOIiwiZXhwIjoxNTU3ODg4NDgwLCJpYXQiOjE1NTc4ODQ4ODAsInZlcnNpb24iOjIsImp0aSI6ImE5NDdhYzIwLTcwMzItNDVkMi1iNGMyLTExZTE2NWM0MWMxYyIsImNsaWVudF9pZCI6Ijd0dnA1cXVnNzdsdWxua2JyazE2Z2p0bjgwIiwidXNlcm5hbWUiOiJiN2E0NmE4Mi04MTc3LTQwNDMtOWZjOS04NjA5ZGU1MTI5MjgifQ.JcICrcRespXj660g7oYqmlIXCXWUHsD7e6pDnbPUGFBtXXBR0A6hNiokLdbDnbdLmVOeWn-O_BCU7g0JXBr-3PqSDHArHPxiXt6LXlgXR_BUYDsEvZu2f6C2sZbUPa7kJ_tEtevrIJKazB1jujySoxJ7rywE57bCEvk_6bvXXZYB2nyg2AbvhRbhLywsUyf87qnobQaPzuBSuxAz_CMzLAPa5bWKotzXxxQQgqrwvKeqNpJQRVwpWweB44aaHrMDtE2GWsNC0qViQe1OluG0nZMHqzjN0yr1VY8bW-WA9Uav9W6hRlJ0JFJd_nvthRqMD_QAR_cCK-kXF3UYwqy-hA"
+        }
+      }
+    }
+  }

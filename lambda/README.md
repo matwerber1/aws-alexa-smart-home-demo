@@ -1,0 +1,5 @@
+## Contents and Usage
+
+The **functions** directory contains source code for AWS Lambda functions that get created by CloudFormation. If a function has dependencies that are not part of the native Lambda runtime, then those dependencies must be installed (e.g. by a `npm install` command) in the function directory prior to running the the `./deploy.sh` script in the root of this project. If the dependencies are not installed, the function will error out when it is invoked due to a `module not found` error. 
+
+The **layers** directory contains source code for AWS [Lambda Layers](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html). A Lambda Layer is a way of packaging up one or more dependencies and then sharing those layers across one or more Lambda functions. A Layer allows you to install/maintain frequently-used dependencies in a single place rather than bundling the dependency source with each individual function. 
