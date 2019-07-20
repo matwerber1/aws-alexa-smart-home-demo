@@ -32,16 +32,22 @@ let reported_state = {
 let desired_state = {};
 
 // Pin numbers are specific to your board manufacturer & model number
-let red_led = 13;               // 5th pin from bottom left
-let blue_led = 5;               // 10th pin from bottom right
-let white_led = 17;             // 9th pin from bottom right
-let tempHumidityPin = 23;       // 18th pin from bottom right
-let button_pin = 16;
-
+//let red_led = 13;               // 5th pin from bottom left
+//let blue_led = 5;               // 10th pin from bottom right
+//let white_led = 17;             // 9th pin from bottom right
+let blue_led = 25;              
+let red_led = 33;              
+let white_led = 32;           
+let tempHumidityPin = 26;      
+let button_pin = 27;
 
 // Initialize DHT library for the temp / humidity sensor
 let dht = DHT.create(tempHumidityPin, DHT.DHT11);
 
+// Set initial output mode
+GPIO.setup_output(red_led, 0);
+GPIO.setup_output(blue_led, 0);
+GPIO.setup_output(white_led, 0);
 
 // Set LED pins to output mode
 GPIO.set_mode(red_led, GPIO.MODE_OUTPUT);
@@ -100,8 +106,7 @@ let setThermostatMode = function (mode) {
         setLED(red_led, false);
         mode = "OFF";
     }
-    
-    clearDesiredThermostatMode();
+
     reported_state.thermostatMode = mode;
     
 };
@@ -124,8 +129,17 @@ let reportState = function() {
   Shadow.update(0, reported_state);
 };
 
+//let tempMode = false;
+
 // Update state every 2000 ms, and report to cloud if connected to AWS
 Timer.set(2000, Timer.REPEAT, function () {
+
+    /*
+    setLED(blue_led, tempMode);
+    setLED(red_led, tempMode);
+    setLED(white_led, tempMode);
+    tempMode = !(tempMode);
+    */
     
     reported_state.uptime = Sys.uptime();
     reported_state.ram_free = Sys.free_ram();
@@ -134,7 +148,9 @@ Timer.set(2000, Timer.REPEAT, function () {
 
     if (isNaN(humidity) || isNaN(temp_celsius)) {
         print('Failed to read data temp/humidity from sensor');
-        return;
+        reported_state.temperature.value = null;
+        reported_state.temperature.scale = 'FAHRENHEIT';
+        reported_state.humidity = null;
     }
     else {
         let temp_fahrenheit = (temp_celsius * (9 / 5)) + 32;
@@ -147,7 +163,7 @@ Timer.set(2000, Timer.REPEAT, function () {
     }
 
     print(JSON.stringify(reported_state));
-
+    
 }, null);
 
 // Set up Shadow handler to synchronise device state with the shadow state
@@ -211,6 +227,7 @@ GPIO.set_button_handler(button_pin, GPIO.PULL_UP, GPIO.INT_EDGE_NEG, 50, functio
     }
         
     if (desired_mode !== undefined) {
+        clearDesiredThermostatMode();
         setThermostatMode(desired_mode);
     }        
     else {

@@ -212,12 +212,39 @@ Now that our skill and backend cloud infrastructure exists, we can now sign up t
 
 In this optional section, we will walk through configuring an ESP32 as follows:
 
-    * Red and blue LED used to indicate that thermostat is in HEAT or COOL mode, respectively
-    * White LED to indicate that the device is successfully connected to your AWS IoT Core cloud backend
-    * DHT11 temp/humidity sensor from which the device will take readings and send to AWS IoT
-    * A push-botton to allow the user to physically change the thermostat between HEAT, COOL, and OFF
+* Red and blue LED used to indicate that thermostat is in HEAT or COOL mode, respectively
+
+* White LED to indicate that the device is successfully connected to your AWS IoT Core cloud backend
+
+* DHT11 temp/humidity sensor from which the device will take readings and send to AWS IoT
+
+* A push-botton to allow the user to physically change the thermostat between HEAT, COOL, and OFF
 
 We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-source IoT operating system. Mongoose OS (MOS) supports C/C++ and Javascript. We will be using the Javascript version in this demo.  
+
+#### ESP32 Components
+
+Links below are examples. I strongly recommend **shopping around** to for "variety" or "starter" kits for IoT/arduino/esp32/etc., as you can probably get everything you need in a kit with lots of extra goodies for much less than the cost of buying everything individually. 
+
+1. [ESP32 Development Board](https://www.amazon.com/gp/product/B0718T232Z/ref=ppx_yo_dt_b_asin_title_o02_s01?ie=UTF8&psc=1) - this is the one I used; you can probably use any ESP32 Dev board, but note the pinout might be slightly different.
+
+2. [Breadboard](https://www.amazon.com/Qunqi-point-Experiment-Breadboard-5-5%C3%978-2%C3%970-85cm/dp/B0135IQ0ZC/ref=sr_1_13?keywords=breadboard&qid=1563661634&s=electronics&sr=1-13) - the one shown here is the size I used at I only had one unused row, so its barely big enough. A longer board might make more sense. 
+
+3. Red, white, and blue LEDs (one each)
+
+4. Three 100-ohm resistors
+
+5. Two 10K-ohm resistors
+
+6. [DHT11 temperature / humidity sensor](https://www.amazon.com/DHT-11-Digital-Temperature-Humidity-Arduino/dp/B0184Y3L4A/ref=sr_1_9?keywords=DHT11&qid=1563662201&s=gateway&sr=8-9) - I wouldn't use this specific link. Again, buy a DHT11 as part of a variety kit to save $$$$ and get other fun stuff. 
+
+7. [TACT Switch](https://www.amazon.com/microtivity-IM206-6x6x6mm-Tact-Switch/dp/B004RXKWI6/ref=sr_1_7?keywords=tact+switch&qid=1563662373&s=gateway&sr=8-7) - really, any push-button switch should work.
+
+8. [Jumper wires](https://www.amazon.com/AUSTOR-Lengths-Assorted-Preformed-Breadboard/dp/B07CJYSL2T/ref=sr_1_2?keywords=jumper+wires+electronics&qid=1563662443&s=gateway&sr=8-2)
+
+#### First-time ESP32 setup
+
+Before we dive into anything specific to this project, let's keep it simple and make sure you have basic connectivity to your ESP32 and can flash the Mongoose OS demo application: 
 
 1. Follow steps 1 through 3 in the [Download and install the MOS tool] guide. 
 
@@ -229,19 +256,44 @@ We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-so
 
 3. If you've successfully flashed your ESP32 and confirmed its sending messages to the MOS console on your computer, you're ready to proceed!
 
-4. TODO: add instructions to connect your ESP32, LEDs, temp sensor, and button as follows:
+#### Wire up your ESP32
+
+The instructions and images below assume you are using the exact same ESP32 dev board that I listed above. If you are not, the pin numbers and locations may be different for your board's manufacturer, so be sure to reference their pinout diagram. 
+
+1. Here's an overview and pseudo-schematic: 
+
+    Board and schematic: 
+    <img src="./images/board_and_schematic.jpg" border="1" style="border-color: black">
+
+    Up-close (1): 
+    <img src="./images/circuit-1.jpg" border="1" style="border-color: black">
+
+    Up-close (2): 
+    <img src="./images/circuit-2.jpg" border="1" style="border-color: black">
+
+    Pintout (this is specific to my ESP32 manufacturer): 
+    <img src="./images/pinout.jpg" border="1" style="border-color: black">
+
+
+1. Push ESP32 into bottom center of breadboard with USB input facing outward.
+
+2. 
+
+
+#### Flash ESP32 with thermostat skill
+1. TODO: add instructions to connect your ESP32, LEDs, temp sensor, and button as follows:
 
     * 
 
-5. TODO: add instructions to create/generate device certs for your IoT thing and download locally. 
+2. TODO: add instructions to create/generate device certs for your IoT thing and download locally. 
 
-6. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
+3. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
 
-7. TODO: add instructions to copy certs to ESP32 (if not already part of the flash)
+4. TODO: add instructions to copy certs to ESP32 (if not already part of the flash)
 
-8. TODO: add instructions to configure WIFI for the ESP32
+5. TODO: add instructions to configure WIFI for the ESP32
 
-9. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
+6. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
 
 ### Test your ESP32 smart thermostat
 
