@@ -206,9 +206,20 @@ Now that our skill and backend cloud infrastructure exists, we can now sign up t
 
 10. Click **Discover Devices** to have the Alexa Cloud invoke your skill's Lambda function to search for and tell Alexa which device(s) are registered to your account: 
 
-    <img src="./images/register-9.PNG" width="25%" border="1" style="border-color: black">
+    <img src="./images/register-9.PNG" width="25%" border="2" style="border-color: black">
 
-### Set up your ESP32
+### Test your Alexa Skill (without ESP32)
+
+1. Talk to your Alexa device (an Echo, Alexa mobile app, etc.) to test the following: 
+
+    * "Alexa, set thermostat to COOL"
+    * "Alexa, set thermostat to OFF"
+    * "Alexa, what is the thermostat temperature?"
+    * "Alexa, set the thermostat to 65 degrees"
+    * "Aelxa, set increase the thermostat temperature"
+
+
+## Optional - Build mock thermostat with ESP32
 
 In this optional section, we will walk through configuring an ESP32 as follows:
 
@@ -222,7 +233,7 @@ In this optional section, we will walk through configuring an ESP32 as follows:
 
 We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-source IoT operating system. Mongoose OS (MOS) supports C/C++ and Javascript. We will be using the Javascript version in this demo.  
 
-#### ESP32 Components
+### ESP32 Components
 
 Links below are examples. I strongly recommend **shopping around** to for "variety" or "starter" kits for IoT/arduino/esp32/etc., as you can probably get everything you need in a kit with lots of extra goodies for much less than the cost of buying everything individually. 
 
@@ -242,7 +253,7 @@ Links below are examples. I strongly recommend **shopping around** to for "varie
 
 8. [Jumper wires](https://www.amazon.com/AUSTOR-Lengths-Assorted-Preformed-Breadboard/dp/B07CJYSL2T/ref=sr_1_2?keywords=jumper+wires+electronics&qid=1563662443&s=gateway&sr=8-2)
 
-#### First-time ESP32 setup
+### First-time ESP32 setup
 
 Before we dive into anything specific to this project, let's keep it simple and make sure you have basic connectivity to your ESP32 and can flash the Mongoose OS demo application: 
 
@@ -256,31 +267,31 @@ Before we dive into anything specific to this project, let's keep it simple and 
 
 3. If you've successfully flashed your ESP32 and confirmed its sending messages to the MOS console on your computer, you're ready to proceed!
 
-#### Wire up your ESP32
+### Wire up your ESP32
 
 The instructions and images below assume you are using the exact same ESP32 dev board that I listed above. If you are not, the pin numbers and locations may be different for your board's manufacturer, so be sure to reference their pinout diagram. 
 
 1. Here's an overview and pseudo-schematic: 
 
     Board and schematic: 
-    <img src="./images/board_and_schematic.jpg" border="1" style="border-color: black">
+
+    <img src="./images/board_and_schematic.jpg" border="1" style="border-color: black;transform:rotate(90deg);">
 
     Up-close (1): 
     <img src="./images/circuit-1.jpg" border="1" style="border-color: black">
 
     Up-close (2): 
-    <img src="./images/circuit-2.jpg" border="1" style="border-color: black">
+    <img src="./images/circuit-2.jpg" border="1" style="border-color: black;">
 
-    Pintout (this is specific to my ESP32 manufacturer): 
-    <img src="./images/pinout.jpg" border="1" style="border-color: black">
-
+    Pinout (this is specific to my ESP32 manufacturer): 
+    <img src="./images/pinout.jpg" border="1" style="border-color: black;transform:rotate(90deg);">
 
 1. Push ESP32 into bottom center of breadboard with USB input facing outward.
 
 2. 
 
 
-#### Flash ESP32 with thermostat skill
+### Flash ESP32 with thermostat skill
 1. TODO: add instructions to connect your ESP32, LEDs, temp sensor, and button as follows:
 
     * 
@@ -317,7 +328,7 @@ The instructions and images below assume you are using the exact same ESP32 dev 
 
     Save the changes and notice within the MOS terminal that the device received a message on the shadow/update MQTT topic that there is a difference between the device's reported and desired state. Note that the device then updates the device's reported state and publishes this new state to the AWS IoT shadow. 
 
-6. Now, the fun part! Talk to your Alexa device and test any of the following directives:
+6. Now, the fun part! Again, talk to your Alexa device but this time see how it interacts with the device to change modes, get the current temperature, or update the target setpoint:
 
     * "Alexa, set thermostat to COOL"
     * "Alexa, set thermostat to OFF"
