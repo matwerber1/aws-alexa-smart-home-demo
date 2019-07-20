@@ -206,7 +206,7 @@ Now that our skill and backend cloud infrastructure exists, we can now sign up t
 
 10. Click **Discover Devices** to have the Alexa Cloud invoke your skill's Lambda function to search for and tell Alexa which device(s) are registered to your account: 
 
-    <img src="./images/register-9.PNG" width="25%" border="2" style="border-color: black">
+    <kbd><img src="./images/register-9.PNG" width="25%" border="1" style="border-color: black"></kbd>
 
 ### Test your Alexa Skill (without ESP32)
 
