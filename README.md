@@ -286,29 +286,23 @@ The instructions and images below assume you are using the exact same ESP32 dev 
     Pinout (this is specific to my ESP32 manufacturer): 
     <img src="./images/pinout.jpg" border="1" style="border-color: black;transform:rotate(90deg);">
 
-1. Push ESP32 into bottom center of breadboard with USB input facing outward.
-
-2. 
-
-
 ### Flash ESP32 with thermostat skill
-1. TODO: add instructions to connect your ESP32, LEDs, temp sensor, and button as follows:
 
-    * 
+1. TODO: add instructions to create/generate device certs for your IoT thing and download locally. 
 
-2. TODO: add instructions to create/generate device certs for your IoT thing and download locally. 
+2. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
 
-3. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
+3. TODO: add instructions to copy certs to ESP32 (if not already part of the flash)
 
-4. TODO: add instructions to copy certs to ESP32 (if not already part of the flash)
+4. TODO: add instructions to configure WIFI for the ESP32
 
-5. TODO: add instructions to configure WIFI for the ESP32
-
-6. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
+5. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
 
 ### Test your ESP32 smart thermostat
 
-1. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter UsePhysicalDevice to have a value of `true`; deploy your updated stack. 
+The CloudFormation template in `template.yaml` has a `UsePhysicalDevice` parameter that has a default value of false. If this value is false, the Alexa Lambda function will not actually interact with IoT Core and will instead just send back mock responses to the Alexa service. Now that we have a functioning ESP32 tied to our IoT Thing in IoT Core, we can modify the `UsePhysicalDevice` parameter to interact with our real device:
+
+1. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter `UsePhysicalDevice` to have a value of `true`; deploy your updated stack. 
 
 2. Within AWS IoT, open the device shadow of your smart home's AWS Thing in the device registry and view the device shadow. 
 
