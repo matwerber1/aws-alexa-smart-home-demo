@@ -19,6 +19,8 @@ While you could build a smart home thermostat skill from scratch, we will use th
 
 We will use [AWS IoT Core](https://aws.amazon.com/iot-core/) to create a `thing`, which is a logical representation of a physical device. Even if you do not build the optional ESP32 thermostat in this project, this project allows you to interact with your IoT `thing` as if it were a physical device.
 
+A core component of our project is the IoT thing's [device shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html), which is a JSON document managed by the AWS IoT Shadow Service that keeps track of the current device state, aka `reported state`, sent by our physical device (if used), and the `desired state` which we can change in the cloud manually, via an application, or - in this case - via interaction with Alexa. The shadow is a powerful feature that allows us to 'queue' messages or commands for our device when connectivity is lost. If our device is disconnected and we change the desired state in the shadow such that it doesn't match the last known reported state, the shadow service will notify the device of the difference between reported and desired state as soon as the device reestablishes a connection to the cloud. With a device shadow, we can decouple the remote control of our device with need for internet connectivity. 
+
 We need to maintain a mapping between your skill's users (stored in Cognito) with their registered thermostats (stored in AWS IoT Core). There are number of places and ways this mapping could be stored, but for this project, we have opted to use [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), a fully-managed NoSQL key-value database.
 
 ## Prerequisites
