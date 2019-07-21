@@ -39,8 +39,7 @@ We need to maintain a mapping between your skill's users (stored in Cognito) wit
 **Part 2 - Thermostat with ESP32 [OPTIONAL]:**
 
 4. [ESP32 First-time Setup](./docs/04-esp32-first-time-setup.md)
-5. [Build your ESP32 Thermostat](./docs/05-build-esp32-thermostat.md)
-    * [ESP32 parts list](./docs/05a-esp32-parts-list.md)
+5. [Build your ESP32 Thermostat](./docs/05-build-esp32-thermostat.md) (See [ESP32 parts list](./docs/05a-esp32-parts-list.md))
 6. [Test your skill and thermostat](./docs/06-test-skill-with-esp32.md)
 
 ## Cost
