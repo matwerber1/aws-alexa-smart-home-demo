@@ -5,3 +5,4 @@ setup_iot.sh
 tmp/
 certs/
 build/
+fs/*.pem*

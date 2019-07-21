@@ -9,13 +9,38 @@ mongoose_os_version: ${mos.version}
 platform: esp32
 
 config_schema:
-  - ["i2c.enable", true]
-  - ["mqtt.server", "a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com:8883"]
   - ["mqtt.enable", true]
-  - ["mqtt.ssl_cert", "aws-esp32_B2CED5.crt.pem"]
-  - ["mqtt.ssl_key", "aws-esp32_B2CED5.key.pem"]
+
+  # the values below are unique to your AWS account / IoT thing and you need
+  # to update them accordingly. The ssl_cert and ssl_key must be downloaded from
+  # AWS IoT and stored in the fs/ directory to be included within the build:
+  - ["mqtt.ssl_cert", "67e48f5611-certificate.pem.crt"]
+  - ["mqtt.ssl_key", "67e48f5611-private.pem.key"]
+  - ["mqtt.server", "a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com:8883"]      
   - ["aws.thing_name", "alexa-smart-home-demo-SmartHomeThing-1LW418RIHGL2X"]
 
+  # Mongoose OS comes with a default ca.pem root CA that will work for AWS.
+  - ["mqtt.ssl_ca_cert", "ca.pem"] 
+
+  # If you want to configure WiFi over Bluetooth, you need this enabled: 
+  - ["bt.enable", true]
+
+  # If you want to keep Bluetooth on instead of it auto-disabling after WiFi,
+  # set keep_enabled to true. Note, this is not secure as no auth is enforced:
+  - ["bt.keep_enabled", true]
+
+  # Enable WiFi
+  - ["wifi.ap.enable", false]
+  - ["wifi.sta.enable", true]
+
+  # Configure WiFi below, or easily do it wirelessly over Bluetooth from your laptop at:
+  # https://mongoose-os.com/ble/#/
+  # - ["wifi.sta.ssid", "YOUR WIFI NAME"]
+  # - ["wifi.sta.pass", "YOUR WIFI PASSWORD"]
+
+  # Hide debugging info. If you want to see more, set this to 3 or remove from build
+  - ["debug.level": 1]
+  
 tags:
   - js
 
@@ -25,8 +50,8 @@ filesystem:
 libs:
   - origin: https://github.com/mongoose-os-libs/boards
   - origin: https://github.com/mongoose-os-libs/js-demo-bundle
-  - origin: https://github.com/mongoose-os-libs/dht  # <-- Add this line!
-  - origin: https://github.com/mongoose-os-libs/mjs  # <-- Add this line!
+  - origin: https://github.com/mongoose-os-libs/dht
+  - origin: https://github.com/mongoose-os-libs/mjs
   - origin: https://github.com/mongoose-os-libs/rpc-service-config
   - origin: https://github.com/mongoose-os-libs/rpc-service-fs
   - origin: https://github.com/mongoose-os-libs/rpc-uart
