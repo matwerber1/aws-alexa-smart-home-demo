@@ -1,5 +1,9 @@
 # aws-alexa-smart-home-demo
 
+## Work in process
+
+Most of the project is done.... but there are still gaps in documentation and instructions. Please bear with me as I clean this up.
+
 ## Overview
 This project shows you how to build an Amazon Alexa skill to control a thermostat using the [Alexa Smart Home API](https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html).
 
