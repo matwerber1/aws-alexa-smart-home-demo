@@ -42,12 +42,12 @@ If we instead use the 5V output from the ESP32, our formulas look like this:
 
 As you can see, 5V with a 100 Ohm resistor puts us right around (what I think?) is a common max rating (~20-30 mA) for common hobbyist LEDs.
 
-Now, I could increase the resistance to bring amps down on 5V, but the reason I chose 3.3V is that the push button I use in this project causes the input voltage to flow to an input pin on the ESP32 when the button is pressed... and I read that it **is generally not safe to use a 5V input to the ESP32 (and similar board) GPIO input pins**. By keeping my LEDs on 3.3V, I can just deal with one voltage for everything and keep the wiring more simple. 
+Now, we could use 5V and just increase the resistance to bring down the amps, but the reason I chose 3.3V is that the push button I use in this project causes the input voltage to flow to an input pin on the ESP32 when the button is pressed... and I read that it **is generally not safe to use a 5V input to the ESP32 (and similar board) GPIO input pins**. By keeping my LEDs on 3.3V, I can just deal with one voltage for everything and keep the wiring more simple. 
 
 ### DHT11 Temperature/Humidity Sensor
 
-I followed this [Adafruit guide](https://learn.adafruit.com/dht?view=all), which calls for a 10K Ohm resistor. It says that the DHT11 works with 3.3 - 5V, but sometimes 3.3V might not be enough, in which case you can do 5V (also with a 10K Ohm resistor). 
+I followed this [Adafruit guide](https://learn.adafruit.com/dht?view=all), which calls for a 10K Ohm resistor. It says that the DHT11 works with 3.3 - 5V, but sometimes 3.3V might not be enough, in which case you can do 5V (also with a 10K Ohm resistor). At least for my DHT11, 3.3V seems to work just fine. 
 
 ### Push-button to Change Thermostat Mode
 
-One of the parts kits I bought came with the same type of buttons [described in this Tumblr guide](https://tymkrs.tumblr.com/post/19734219441/the-four-pin-switch-hooking-it-up). Refer to the guide for wiring instructions. It's ok if you have a different type of button... it just may require slightly different wiring.
+One of the parts kits I bought came with the same type of buttons [described in this Tumblr guide](https://tymkrs.tumblr.com/post/19734219441/the-four-pin-switch-hooking-it-up). Refer to the guide for wiring instructions. It's ok if you have a different type of button... it just may require slightly different wiring. Again, I used a 10K Ohm resistor per guidance at https://learn.sparkfun.com/tutorials/pull-up-resistors/all.

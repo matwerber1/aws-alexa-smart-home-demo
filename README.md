@@ -28,6 +28,20 @@ We need to maintain a mapping between your skill's users (stored in Cognito) wit
 3. [Node10.x](https://nodejs.org/en/download/) and [npm](https://www.npmjs.com/get-npm) (to install Lambda dependencies before uploading to AWS)
 4. Optional - an ESP32 and related components, if you want to build the physical "thermostat" - [ESP32 Bill of Materials / Parts List](docs/esp32-parts-list.md)
 
+## Deployment
+
+**Part 1 - Alexa Skill and AWS Cloud Backend [REQUIRED]:**
+
+1. [Create Alexa Skill and AWS Backend](./docs/01-create-alexa-skill-and-aws-backend.md)
+1. [Sign up for your skill](./docs/02-sign-up-for-your-skill.md)
+1. [Test your skill](./docs/03-test-skill-without-device.md)
+
+**Part 2 - Thermostat with ESP32 [OPTIONAL]:**
+4. [ESP32 First-time Setup](./docs/04-esp32-first-time-setup.md)
+5. [Build your ESP32 Thermostat](./docs/05-build-esp32-thermostat.md)
+    * [ESP32 parts list](./docs/05a-esp32-parts-list.md)
+6. [Test your skill and thermostat](./docs/06-test-skill-with-esp32.md)
+
 ## Cost
 
 On the AWS side of things, everything we do should cost near-zero (maybe pennies a month). I haven't calculated exact costs, but the [AWS Free Tier](https://aws.amazon.com/free/) covers a lot. As of this writing (July 2019), the "always free tier" provides more than enough usage to cover: 
