@@ -367,7 +367,43 @@ Resources:
           modelNumber: 'smartThing-v1'
           firmwareVersion: '1.00'
           serialNumber: '1234556789'
-  
+
+  # Today, AWS IoT Core allows standard MQTT last will messages to be specified, 
+  # and it does send them to the proper shadow topics, but the LWT specifically
+  # cannot directly update the IoT device shadow. We have to use a workaround
+  # by which we specify the LWT topic to publish to a custom topic rather than
+  # the device shadow; we use the rule below to republish the LWT to the actual
+  # reserved aws shadow topic, thus ensuring our LWT makes required changes to the
+  # shadow. See link below for details: 
+  # https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-data-flow.html  
+  IoTRuleRepublishLastWill:
+    Type: AWS::IoT::TopicRule
+    Properties: 
+      TopicRulePayload: 
+        Sql: "SELECT * FROM 'alexaSmartHomeDemo/lastWill/+'"
+        RuleDisabled: false
+        Actions: 
+          - Republish:
+              Topic: "$$aws/things/${topic(3)}/shadow/update"
+              RoleArn: !GetAtt IotRulesRole.Arn
+            
+
+  IotRulesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal: 
+              Service: 
+                - "iot.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/service-role/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSIoTRuleActions"
+
   IoTThingPolicy:
     Type: AWS::IoT::Policy
     Properties: 

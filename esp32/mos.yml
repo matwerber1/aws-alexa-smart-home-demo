@@ -18,6 +18,11 @@ config_schema:
   - ["mqtt.ssl_key", "67e48f5611-private.pem.key"]
   - ["mqtt.server", "a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com:8883"]      
   - ["aws.thing_name", "alexa-smart-home-demo-SmartHomeThing-1LW418RIHGL2X"]
+  
+  # Number of seconds without connectivity before AWS IoT determines device has
+  # disconnected; this has a direct impact on how long it takes for the LWT to
+  # trigger:
+  - ["mqtt.keep_alive", 5]
 
   # Mongoose OS comes with a default ca.pem root CA that will work for AWS.
   - ["mqtt.ssl_ca_cert", "ca.pem"] 
@@ -39,7 +44,7 @@ config_schema:
   # - ["wifi.sta.pass", "YOUR WIFI PASSWORD"]
 
   # Hide debugging info. If you want to see more, set this to 3 or remove from build
-  - ["debug.level": 1]
+  - ["debug.level", 1]
   
 tags:
   - js

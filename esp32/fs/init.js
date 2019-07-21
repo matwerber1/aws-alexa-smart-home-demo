@@ -8,6 +8,40 @@ load('api_timer.js');
 load('api_sys.js');
 load('api_dht.js');
 
+let aws_thing_name = Cfg.get('aws.thing_name');
+
+// A "last will and testament" (LWT) is configured by the device and instructs
+// the AWS IoT Core pub/sub broker to send this message if the device disconnects.
+// Without an LWT, if a device suddenly disconnected, it's shadow would incorrectly
+// report { connectivity: "OK" } when it is not actually connected.
+let last_will_message = JSON.stringify(
+    {
+        reported: {
+            connectivity: 'UNREACHABLE'
+        }
+    }
+);
+let last_will_message_config = {
+    mqtt: {
+        will_message: last_will_message
+    }
+};
+Cfg.set(last_will_message_config, true);
+
+// If you do not specify a topic, Mongoose OS will publish the last will (LWT) to the
+// reserved topic device shadow, as expected. However, currently, AWS IoT Core
+// does not allow LWT messages to directly update a shadow. So instead, we have
+// to publish to a custom topic and then set up a rule in IoT Core that forwards
+// the message the actual reserved shadow topic. 
+// https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-data-flow.html
+let last_will_topic = 'alexaSmartHomeDemo/lastWill/' + aws_thing_name;
+let last_will_topic_config = {
+    mqtt: {
+        will_topic: last_will_topic
+    }
+};
+Cfg.set(last_will_topic_config, true);
+
 // State that we will report back to AWS IoT
 let reported_state = {
     deviceType: "AlexaSmartHomeDemo",
@@ -64,7 +98,7 @@ let setLED = function (led, state) {
 // Only used if we change desired state by physically interacting with our device;
 let publishDesiredState = function () {
     print('Published desired state changes...');
-    let topic = '$aws/things/' + Cfg.get('aws.thing_name') + '/shadow/update';
+    let topic = '$aws/things/' + aws_thing_name + '/shadow/update';
 
     let message = JSON.stringify({
         state: {
