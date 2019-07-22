@@ -20,7 +20,7 @@ To model a basic thermostat, we will use a developer version of the popular [Esp
 
 A picture's worth a thousand words: 
 
-<img src="./images/architecture-overview.JPG" border="1" style="border-color: black;">
+<img src="./images/architecture-overview.JPG" border="1" style="border-color: black;transform:rotate(180deg);">
 
 ## Prerequisites
 
