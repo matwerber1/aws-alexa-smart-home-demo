@@ -1,5 +1,10 @@
 # aws-alexa-smart-home-demo
 
+## Demo Video
+
+This video shows the ESP32 in action by asking Alexa to change the device's state and asking it for the current temperature: 
+https://www.youtube.com/watch?v=Cc9Y0D2bzJ8
+
 ## Work in process
 
 Most of the project is done.... but there are still gaps in documentation and instructions. Please bear with me as I clean this up.
@@ -13,6 +18,9 @@ To model a basic thermostat, we will use a developer version of the popular [Esp
 
 * **You do not need an ESP32 (or similar) device** if you do not want to build a physical (mock) thermostat. You can still build and test your Alexa skill without a physical device (though a real device is cooler!). 
 
+A picture's worth a thousand words: 
+
+<img src="./images/architecture-overview.JPG" border="1" style="border-color: black;transform:rotate(180deg);">
 
 ## Prerequisites
 
