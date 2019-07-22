@@ -13,6 +13,14 @@ To model a basic thermostat, we will use a developer version of the popular [Esp
 
 * **You do not need an ESP32 (or similar) device** if you do not want to build a physical (mock) thermostat. You can still build and test your Alexa skill without a physical device (though a real device is cooler!). 
 
+
+## Prerequisites
+
+1. AWS Account with administrative access
+2. A pre-existing Amazon S3 Bucket to store CloudFormation templates (or, you can create one as you go)
+3. [Node10.x](https://nodejs.org/en/download/) and [npm](https://www.npmjs.com/get-npm) (to install Lambda dependencies before uploading to AWS)
+4. Optional - an ESP32 and related components, if you want to build the physical "thermostat" - [ESP32 Bill of Materials / Parts List](docs/esp32-parts-list.md)
+
 ## Deployment
 
 **Part 1 - Alexa Skill and AWS Cloud Backend [REQUIRED]:**
@@ -115,13 +123,6 @@ In our demo, we will cover this use case as described. In our case, we have a Dy
 3. The Alexa Service will determine which Smart Home API the user is requesting (e.g. get temperature, or set mode) and send that request to SmartCompany's Lambda function; the request will also include the customer's user ID and endpoint ID. Note that the Alexa Service keeps a mapping between SmartCompany's internal endpoint ID and the device name spoken by the user. SmartCompany must define a default name for their device during the discovery process, but the Customer can always change it in the Alexa app. 
 4. In the case of the user asking for information, such as current temperature, the Lambda function will typically read this from the device's last reported state in the AWS IoT Core device shadow. 
 5. In the case of the user directing the device to do something, such as change the mode or target temperature, the Lambda function will typically update the `desired state` in the device shadow; if the device is online, or when it next reconnects, the shadow service will send a `shadow delta` message to the device if the reported and desired states do not match. The device's application logic should have code that works to resolve the delta by changing desired state to match reported state.
-
-## Prerequisites
-
-1. AWS Account with administrative access
-2. A pre-existing Amazon S3 Bucket to store CloudFormation templates (or, you can create one as you go)
-3. [Node10.x](https://nodejs.org/en/download/) and [npm](https://www.npmjs.com/get-npm) (to install Lambda dependencies before uploading to AWS)
-4. Optional - an ESP32 and related components, if you want to build the physical "thermostat" - [ESP32 Bill of Materials / Parts List](docs/esp32-parts-list.md)
 
 ## Cost
 
