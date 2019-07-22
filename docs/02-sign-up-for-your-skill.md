@@ -57,7 +57,7 @@ Proceed as follows:
 
 4. Navigate to the [DynamoDB table list](https://console.aws.amazon.com/dynamodb/home#tables:), click the table with a name similar to `alexa-smart-home-demo-DeviceTable-1EM716Y4F5F6H`, click the **Items** tab, and click **Create item**:
 
-    ![altText](./../images/dynamodb-1.png)
+    ![altText](./../images/dynamodb.png)
 
 5. On the create item popup window, click the top-left dropdown and change it from "Tree" to "Text", then copy paste the info below and click **Save**. Be sure to replace the user ID and thing name with your unique values from Steps 1 and 2:
 

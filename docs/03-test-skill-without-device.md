@@ -47,7 +47,6 @@ Note - at this stage, we've created the backend but there is no physical device.
 
         <img src="./../images/app-4.png" width="25%" border="1" style="border-color: black">
     
-
     * This is what you will see if the device is connected (`{state: { reported: { "connectivity": "OK" } } }`) but thermostat mode is off (`{state: { reported: { "thermostatMode": "OFF" } } }`):
 
         <img src="./../images/app-3.png" width="25%" border="1" style="border-color: black">
