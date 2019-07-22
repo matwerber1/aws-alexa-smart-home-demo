@@ -1,18 +1,22 @@
-## Optional - Build mock thermostat with ESP32
+# Build a (mock) Smart Thermostat with an ESP32
 
-In this optional section, we will walk through configuring an ESP32 as follows:
+In this optional section, we will wire up an ESP32 to act as a mock thermostat connected to our AWS backend. 
 
-* Red and blue LED used to indicate that thermostat is in HEAT or COOL mode, respectively
+## Component overview
 
-* White LED to indicate that the device is successfully connected to your AWS IoT Core cloud backend
+* **Red and blue LEDs** used to indicate that thermostat is in HEAT or COOL mode, respectively
 
-* DHT11 temp/humidity sensor from which the device will take readings and send to AWS IoT
+* **White LED** to indicate that the device is successfully connected to your AWS IoT Core cloud backend
 
-* A push-botton to allow the user to physically change the thermostat between HEAT, COOL, and OFF
+* **DHT11** temp/humidity sensor from which the device will take readings and send to AWS IoT
 
-We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-source IoT operating system. Mongoose OS (MOS) supports C/C++ and Javascript. We will be using the Javascript version in this demo.  
+* **Push-botton** to allow the user to physically change the thermostat between HEAT, COOL, and OFF
 
-### Wire up your ESP32
+## Bill of Materials / Parts List
+
+Refer to the [ESP32 Thermostat bill of materials (BOM)](./05a-esp32-parts-list.md) for the components needed to build your mock device.
+
+## Wire up your ESP32
 
 The instructions and images below assume you are using the exact same ESP32 dev board that I listed above. If you are not, the pin numbers and locations may be different for your board's manufacturer, so be sure to reference their pinout diagram. 
 
@@ -31,7 +35,9 @@ The instructions and images below assume you are using the exact same ESP32 dev 
     Pinout (this is specific to my ESP32 manufacturer): 
     <img src="./../images/pinout.jpg" border="1" style="border-color: black;transform:rotate(90deg);">
 
-### Flash ESP32 with thermostat skill
+## Flash ESP32 with thermostat skill
+
+We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-source IoT operating system. Mongoose OS (MOS) supports C/C++ and Javascript. We will be using the Javascript version in this demo.  
 
 1. TODO: add instructions to create/generate device certs for your IoT thing and download locally. 
 
