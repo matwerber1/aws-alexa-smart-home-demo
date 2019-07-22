@@ -1,5 +1,20 @@
 # aws-alexa-smart-home-demo
 
+## Overview
+This project shows you how to build an Amazon Alexa skill to control a thermostat using the [Alexa Smart Home API](https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html).
+
+Whereas many Alexa examples focus only on the AWS Lambda function and dummy JSON responses sent to/from the Alexa service, this project aims to give a more complete end-to-end demo by demonstrating ways that one might use Amazon DynamoDB, AWS IoT Core, Amazon Cognito, and other services. 
+
+A picture is worth a thousand words: 
+
+<img src="./images/architecture-overview.JPG" border="1" style="border-color: black;transform:rotate(180deg);">
+
+## No Physical Devices Necessary
+
+* **You do not need a physical Alexa device** to interact with your skill or control your thermostat. You can use the free [Alexa mobile app](https://www.amazon.com/gp/help/customer/display.html?nodeId=201602060) or [Alexa Web Console](https://alexa.amazon.com) sign up and beta test your skill. 
+
+* **You do not need an ESP32** if you do not want to bother creating a physical device. Your Alexa skill can interact purely with the AWS IoT device shadow, and you can place dummy data into the shadow to simulate the device being online. That being said, the project is way more fun if you build the ESP32 mock thermostat, too :)
+
 ## Demo Video
 
 This video shows the ESP32 in action by asking Alexa to change the device's state and asking it for the current temperature: 
@@ -8,19 +23,6 @@ https://www.youtube.com/watch?v=Cc9Y0D2bzJ8
 ## Work in process
 
 Most of the project is done.... but there are still gaps in documentation and instructions. Please bear with me as I clean this up.
-
-## Overview
-This project shows you how to build an Amazon Alexa skill to control a thermostat using the [Alexa Smart Home API](https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html).
-
-* **You do not need a physical Alexa-enabled device** to build and test your skill. You can use the free [Alexa mobile app](https://www.amazon.com/gp/help/customer/display.html?nodeId=201602060) or [Alexa Web Console](https://alexa.amazon.com) sign up and beta test your skill. 
-
-To model a basic thermostat, we will use a developer version of the popular [Espressif ESP32 microcontroller](https://www.espressif.com/en/products/hardware/esp32/overview), which contains built-in WiFi and Bluetooth modules for easy connectivity to the cloud. 
-
-* **You do not need an ESP32 (or similar) device** if you do not want to build a physical (mock) thermostat. You can still build and test your Alexa skill without a physical device (though a real device is cooler!). 
-
-A picture's worth a thousand words: 
-
-<img src="./images/architecture-overview.JPG" border="1" style="border-color: black;transform:rotate(180deg);">
 
 ## Prerequisites
 
