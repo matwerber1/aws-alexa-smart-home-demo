@@ -9,7 +9,7 @@ In this optional section, we will wire up an ESP32 to act as a mock thermostat c
 * **DHT11** temp/humidity sensor from which the device will take readings and send to AWS IoT
 * **Push-button** to allow the user to physically change the thermostat between HEAT, COOL, and OFF
 
-## Bill of Materials / Parts List
+## Bill of Materials
 
 Refer to the [ESP32 Thermostat bill of materials (BOM)](./05a-esp32-parts-list.md) for the components needed to build your mock device.
 
@@ -17,9 +17,7 @@ Refer to the [ESP32 Thermostat bill of materials (BOM)](./05a-esp32-parts-list.m
 
 The instructions and images below assume you are using the exact same ESP32 dev board that I listed above. If you are not, the pin numbers and locations may be different for your board's manufacturer, so be sure to reference their pinout diagram. 
 
-1. Here's an overview and pseudo-schematic: 
-
-    Board and schematic: 
+1. Board and schematic: 
 
     <img src="./../images/board_and_schematic.jpg" border="1" style="border-color: black;transform:rotate(90deg);">
 
