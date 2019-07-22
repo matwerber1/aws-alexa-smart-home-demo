@@ -2,15 +2,12 @@
 
 In this optional section, we will wire up an ESP32 to act as a mock thermostat connected to our AWS backend. 
 
-## Component overview
+## Key Components
 
 * **Red and blue LEDs** used to indicate that thermostat is in HEAT or COOL mode, respectively
-
 * **White LED** to indicate that the device is successfully connected to your AWS IoT Core cloud backend
-
 * **DHT11** temp/humidity sensor from which the device will take readings and send to AWS IoT
-
-* **Push-botton** to allow the user to physically change the thermostat between HEAT, COOL, and OFF
+* **Push-button** to allow the user to physically change the thermostat between HEAT, COOL, and OFF
 
 ## Bill of Materials / Parts List
 
