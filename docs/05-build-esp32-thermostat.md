@@ -42,3 +42,7 @@ The instructions and images below assume you are using the exact same ESP32 dev 
 4. TODO: add instructions to configure WIFI for the ESP32
 
 5. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
+
+## Next Steps
+
+Once you have your components, complete [Step 6 - Test Your Skill with an ESP32 Thermostat](./06-test-skill-with-esp32.md).

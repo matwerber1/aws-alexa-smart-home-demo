@@ -1,6 +1,6 @@
-# Create Alexa Skill and AWS Cloud Backend Infrastructure
+# Part 1 - Create Alexa Skill and AWS Cloud Backend Infrastructure
 
-First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Cloud and our smart home application infrastructure in our AWS account. We connect the two components by giving the Alexa Cloud permission to invoke a Lambda function within our AWS account and by giving the Lambda function permission to send responses to our skill in the Alexa Cloud:
+First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Service and our smart home application infrastructure in our AWS account. We connect the two components by giving the Alexa Cloud permission to invoke a Lambda function within our AWS account and by giving the Lambda function permission to send responses to our skill in the Alexa Cloud:
 
 1. Register a developer account with the [Alexa Developer Console](https://developer.amazon.com/). Note that the **email address** you use should match the email address you later plan to test your skill with. You could optionally complete additional steps to open up testing to others, but this demo does not cover that and focuses on testing by one user (you). 
 
@@ -61,3 +61,7 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Cloud an
         6. Add **phone** and **openid** as values to the **Scope** section of the Alexa Configuration. Note - spelling and case must exactly match. 
         7. Leave **Domain List** and **Default Access Token Expiration Time** blank. 
         8. Click Save.
+
+## Next Steps
+
+Proceed to [Step 2 - Sign up for your skill](./02-sign-up-for-your-skill.md).

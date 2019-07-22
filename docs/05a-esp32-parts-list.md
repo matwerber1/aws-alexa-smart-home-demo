@@ -51,3 +51,7 @@ I followed this [Adafruit guide](https://learn.adafruit.com/dht?view=all), which
 ### Push-button to Change Thermostat Mode
 
 One of the parts kits I bought came with the same type of buttons [described in this Tumblr guide](https://tymkrs.tumblr.com/post/19734219441/the-four-pin-switch-hooking-it-up). Refer to the guide for wiring instructions. It's ok if you have a different type of button... it just may require slightly different wiring. Again, I used a 10K Ohm resistor per guidance at https://learn.sparkfun.com/tutorials/pull-up-resistors/all.
+
+## Next Steps
+
+Once you have your components, complete [Step 5 - Build Your ESP32 Thermostat](./05-build-esp32-thermostat.md).
