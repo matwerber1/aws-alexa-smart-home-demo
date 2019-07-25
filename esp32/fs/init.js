@@ -16,8 +16,10 @@ let aws_thing_name = Cfg.get('aws.thing_name');
 // report { connectivity: "OK" } when it is not actually connected.
 let last_will_message = JSON.stringify(
     {
-        reported: {
-            connectivity: 'UNREACHABLE'
+        state: {
+            reported: {
+                connectivity: 'UNREACHABLE'
+            }
         }
     }
 );
@@ -45,7 +47,7 @@ Cfg.set(last_will_topic_config, true);
 // State that we will report back to AWS IoT
 let reported_state = {
     deviceType: "AlexaSmartHomeDemo",
-    connectivity: 'UNREACHABLE',  
+    connectivity: undefined,  
     uptime: 0,
     targetSetpoint: {
         scale: undefined,
