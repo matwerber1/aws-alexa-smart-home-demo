@@ -13,7 +13,7 @@ A picture is worth a thousand words:
 
 * **You do not need a physical Alexa device** to interact with your skill or control your thermostat. You can use the free [Alexa mobile app](https://www.amazon.com/gp/help/customer/display.html?nodeId=201602060) or [Alexa Web Console](https://alexa.amazon.com) sign up and beta test your skill. 
 
-* **You do not need an ESP32** if you do not want to bother creating a physical device. Your Alexa skill can interact purely with the AWS IoT device shadow, and you can place dummy data into the shadow to simulate the device being online. That being said, the project is way more fun if you build the ESP32 mock thermostat, too :)
+* **You do not need an ESP32 for the thermostat** if you do not want to bother creating a mock thermostat. Your Alexa skill can interact purely with the AWS IoT device shadow, and you can place dummy data into the shadow to simulate the device being online. That being said, the project is way more fun if you build the ESP32 mock thermostat, too :)
 
 ## Demo Video
 
