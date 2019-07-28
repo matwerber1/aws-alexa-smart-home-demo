@@ -125,9 +125,11 @@ Now we will flash the thermostat code and AWS IoT certificates to your ESP32. If
 5. Within the mos UI, type `mos flash` to flash your ESP32:
 
     Flash in process:
+
     <img src="./../images/mos-flash-01.png" width="35%" border="1" style="border-color: black">
 
     Flash complete: 
+    
     <img src="./../images/mos-flash-02.png" width="35%" border="1" style="border-color: black">
 
 ## Verify Flash was Successful
