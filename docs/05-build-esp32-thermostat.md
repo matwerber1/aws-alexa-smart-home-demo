@@ -125,10 +125,10 @@ Now we will flash the thermostat code and AWS IoT certificates to your ESP32. If
 5. Within the mos UI, type `mos flash` to flash your ESP32:
 
     Flash in process:
-    ![alt text](./../images/mos-flash-01.png)
+    <img src="./../images/mos-flash-01.png" width="35%" border="1" style="border-color: black">
 
     Flash complete: 
-    ![alt text](./../images/mos-flash-02.png)
+    <img src="./../images/mos-flash-02.png" width="35%" border="1" style="border-color: black">
 
 ## Verify Flash was Successful
 
@@ -175,7 +175,7 @@ If your white LED is off, then (a) you are not connected to WiFi or (b) you are 
 
 To troubleshoot, open the MOS UI, plug in your device to your computer, and reboot the device. Then, carefully review the boot logs to see if there are any error messages related to WiFi or MQTT.
 
-WiFi error messages might look like this: 
+WiFi error messages might look like this, `WiFi STA: Connect timeout`: 
 
 ![alt text](./../images/wifi-error.png)
 
