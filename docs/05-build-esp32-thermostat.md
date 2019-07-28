@@ -48,7 +48,9 @@ The CloudFormation template you deployed in previous steps created an AWS IoT "T
 
 4. On the next screen, you should see a **Certificate created!** message. Follow these steps: 
 
-    1. Download the device certificate and private key to the `esp32/fs` directory of your project repository. For this demo, you do not need to download the public key.
+    1. Download the device certificate and private key to the `esp32/fs` directory of your project repository. For this demo, you do not need to download the public key:
+
+    ![alt text](./../images/esp32-directory.png)
 
     2. Click **Activate** to activate your certificate. 
 
@@ -73,25 +75,25 @@ Before we flash your ESP32 with the thermostat code, we need to make a few chang
     - ["mqtt.ssl_key", "67e48f5611-private.pem.key"]
     ```
 
-3. Within `esp32/mos.yml`, set the name of your MQTT server to your custom AWS endpoint, which is shown in your [AWS IoT Core Settings](https://us-east-1.console.aws.amazon.com/iot/home#/settings)]: 
+3. Within `esp32/mos.yml`, set the name of your MQTT server to your custom AWS endpoint:
 
     ```yaml
     - ["mqtt.server", "a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com:8883"]   
     ```
 
-    Your AWS IoT Settings will be similar to below: 
+    You can find your custom endpoint from your [AWS IoT Core Settings](https://us-east-1.console.aws.amazon.com/iot/home#/settings): 
     ![alt text](./../images/iot-settings.png)
 
-5. Within `esp32/mos.yml`, set the name of your AWS IoT thing; note - this must exactly match the name of your thing as shown in the [AWS IoT Registry](https://us-east-1.console.aws.amazon.com/iot/home#/thinghub), since the Mongoose OS MQTT libraries use this value to determine the proper MQTT shadow topic: 
+5. Within `esp32/mos.yml`, set the name of your AWS IoT thing:
 
     ```yaml
     - ["aws.thing_name", "alexa-smart-home-demo-SmartHomeThing-1LW418RIHGL2X"]
     ```
 
-    Your AWS IoT thing name will be similar to below: 
+    Your can find your thing name from the [AWS IoT Registry](https://us-east-1.console.aws.amazon.com/iot/home#/thinghub):
     ![alt text](./../images/thing-name-registry.png)
 
-6. You can optionally uncomment the lines below and enter your WiFi SSID and password, though this step isn't required. We will later show you how to set these values wireless over Bluetooth: 
+6. You can optionally uncomment the lines below and enter your WiFi SSID and password, though this step isn't required. We will later show you how to set these values wirelessly over Bluetooth: 
 
     ```yaml
     # - ["wifi.sta.ssid", "YOUR WIFI NAME"]
@@ -99,13 +101,83 @@ Before we flash your ESP32 with the thermostat code, we need to make a few chang
     ```
 
 ## Flash ESP32 with Thermostat Code and AWS IoT Certificates
-2. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
+
+Now we will flash the thermostat code and AWS IoT certificates to your ESP32. If you haven't already, complete the [ESP32 First-time setup instructions](./04-esp32-first-time-setup.md), then proceed below: 
+
+1. Plug in your ESP32 to your computer via USB
+
+2. From a terminal, type `mos` to start the mos UI
+
+3. Within the mos UI, navigate to the `esp32` directory of your project root: 
+
+    ```bash
+    cd path-to-project/aws-alexa-smart-home-demo/esp32
+    ```
+
+4. Within the mos UI, type `mos build` to build your project. The UI will send the contents of `mos.yml` and your `esp32/fs` directory to a Mongoose OS build server and the server will return the compiled project. You can optionally build locally (refer to Mongoose OS docs for details):
+
+    Issue the build command:
+    ![alt text](./../images/mos-build-01.png)
+
+    Wait for build to complete: 
+    ![alt text](./../images/mos-build-02.png)
+
+5. Within the mos UI, type `mos flash` to flash your ESP32:
+
+    Flash in process:
+    ![alt text](./../images/mos-flash-01.png)
+
+    Flash complete: 
+    ![alt text](./../images/mos-flash-02.png)
+
+## Verify Flash was Successful
+
+1. Once the flash completes, you should see telemetry from the ESP32 display within your MOS console:
+
+    ![alt text](./../images/mos-telemetry.png)
+
+2. If you see something similar to `"temperature": { "value": 75, "scale": "FAHRENHEIT"}` and `"humidity": 37` in the telemetry, your DHT11 temp/humidity sensor is working. 
+
+3. If you press your button on the red and blue LEDs toggle on/off, your button is working (the button does not affect the white LED):
+
+    Thermostat mode is HEAT: 
+    ![alt text](./../images/heat-mode.png)
+
+    Thermostat mode is COOL: 
+    ![alt text](./../images/heat-mode.png)
+
+    Thermostat mode is OFF: 
+    ![alt text](./../images/heat-mode.png)
 
 ## Configure WiFi on your ESP32
-4. TODO: add instructions to configure WIFI for the ESP32
+
+If the white LED on your ESP32 is glowing solid, you are already connected to WiFi and AW IoT Core and you can skip this step. 
+
+1. Navigate to https://mongoose-os.com/ble/#/
+
+2. Click **Choose device** and search for and select a device with a name similar to `ESP32_B2CE5D` (your device will have a different suffix).
+
+3. Enter your WiFi SSID and password. <mark>Note - the ESP32 I use only works with 2G WiFi</mark>. To be safe, I recommend you first test a 2G WiFi before testing 5G.
+
+4. Click **Save WiFi settings**, and after a few moments a popup alert should say **Done!**. 
 
 ## Verify Connectivity to AWS IoT Core
-After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
+
+If you followed all steps closely and if my instructions are correct :), then your white LED should be on and solid, meaning it is connected to both WiFi and AWS IoT Core. Congrats!
+
+If your white LED is off, then (a) you are not connected to WiFi or (b) you are on WiFi but not connected to AWS IoT Core. 
+
+1. You entered incorrect WiFi credentials. 
+2. You entered a 5G WiFi configuration, but your ESP32 only supports 2G WiFi. 
+3. You did not flash your AWS certificates to the device by including them in the `esp32/fs` directory before executing `mos build`
+4. You did not activate your certificates in AWS IoT Core.
+5. You did not attach a certificate policy to the certificates which allows them to connect to AWS IoT Core
+
+To troubleshoot, open the MOS UI, plug in your device to your computer, and reboot the device. Then, carefully review the boot logs to see if there are any error messages related to WiFi or MQTT.
+
+WiFi error messages might look like this: 
+
+![alt text](./../images/wifi-error.png)
 
 ## Next Steps
 
