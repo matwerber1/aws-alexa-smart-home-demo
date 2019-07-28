@@ -3,19 +3,21 @@
 
 The CloudFormation template in `template.yaml` has a `UsePhysicalDevice` parameter that has a default value of false. If this value is false, the Alexa Lambda function will not actually interact with IoT Core and will instead just send back mock responses to the Alexa service. Now that we have a functioning ESP32 tied to our IoT Thing in IoT Core, we can modify the `UsePhysicalDevice` parameter to interact with our real device:
 
-1. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter `UsePhysicalDevice` to have a value of `true`; deploy your updated stack. 
+1. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter **UsePhysicalDevice** to have a value of `true`; deploy your updated stack. When this parameter is `false`, the Lambda function invoked by Alexa will directly update the AWS IoT thing's reported state to match the requested state from Alexa; when set to `true`, the Lambda will only update the desired state because our assumption is that there is a physical device that will receive the state change, physically update state, and report back the new state itself.
 
-2. Within AWS IoT, open the device shadow of your smart home's AWS Thing in the device registry and view the device shadow. 
+2. Within AWS IoT, open the device shadow of your smart home's AWS Thing in the device registry and view the device shadow. If your device is connected, it may look something like this: 
 
-3. Notice that the device is updated the reported state's temperature, humidity, and up-time.
+    ![alt text](./../images/shadow-01.png)
 
-4. Press the thermostat mode button on the ESP32 and notice that the mode (via red and blue LEDs) changes on the device and that the reported state changes in the IoT shadow. 
+3. If your ESP32 is connected (white LED on), you should see the `uptime` value incrementing in the reported state. If you blow "hot" air directly over the DHT11 for a few seconds, you should eventually see the reported `temperature` and `humidity` change.
+
+4. Press the thermostat mode button on the ESP32 and notice that the mode (via red and blue LEDs) changes on the device and that the reported `thermostatMode` toggles between `OFF`, `COOL`, and `HEAT`.
 
 5. Manually edit the IoT device shadow by adding the following section to the shadow document:
 
     Note - replace "COOL" with either "HEAT" or "OFF", if your device is already in COOL mode
 
-    ```
+    ```json
     "desired": {
         thermostatMode: "COOL"
     }
@@ -29,4 +31,4 @@ The CloudFormation template in `template.yaml` has a `UsePhysicalDevice` paramet
     * "Alexa, set thermostat to OFF"
     * "Alexa, what is the thermostat temperature?"
     * "Alexa, set the thermostat to 65 degrees"
-    * "Aelxa, set increase the thermostat temperature"
+    * "Aelxa, increase the thermostat temperature"
