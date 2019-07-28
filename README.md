@@ -66,6 +66,62 @@ A core component of our project is the IoT thing's [device shadow](https://docs.
 
 We need to maintain a mapping between your skill's users (stored in Cognito) with their registered thermostats (stored in AWS IoT Core). There are number of places and ways this mapping could be stored, but for this project, we have opted to use [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), a fully-managed NoSQL key-value database.
 
+
+### Design Decisions I question
+
+This section contains design choices that I am unsure of or where I want to further explain my reasoning. 
+
+#### DynamoDB to store user-to-device mappings
+
+I chose DynamoDB because I wanted the possibility of a "many to one" mapping of users to a single device. For example, maybe a household (family or roommates) all want to control the same thermostat using their separately-registered Alexa devices and accounts. If we only needed a "one-to-one" mapping, then it would be simpler to use an attribute in our IoT thing's device registry. 
+
+#### Storing Alexa discovery config in Lambda code
+ 
+ When a user asks Alexa to discover available devices, Alexa will query your backend application (via a Lambda) to ask for a list of devices associated to the user's Cognito ID. You must return a [Discovery response](https://developer.amazon.com/docs/device-apis/alexa-discovery.html#response) in the form of a list for each device containing basic information (e.g. device name, manufacturer name) as well as complex nested structures that describe the device's capabilities (e.g. [ThermostatController](https://developer.amazon.com/docs/device-apis/alexa-thermostatcontroller.html)). 
+
+While the simple attributes could be stored as attributes in the AWS IoT Registry, the registry didn't seem like a good fit for the complex structures that describe device capabilities/interfaces. So, I opted to contain both the simple and complex information in a Javascript map object as part of the Alexa Lambda's source code (`./lambda/functions/alexa-skill/discoveryConfig.js`). 
+    
+The config object has the following format:
+
+```javascript
+const discoveryConfig = {
+    'smartThing-v1': {
+        '1.00': {
+            manufacturerName: 'SmartHome Products, Inc.',
+            modelName: 'Model 001',
+            friendlyName: 'Smart Device',
+            description: 'My SmartHome Product!',
+            displayCategories: [
+                'OTHER', 
+                'THERMOSTAT',
+                'TEMPERATURE_SENSOR'
+            ],
+            capabilities: [
+                {
+                    type: "AlexaInterface",
+                    interface: "Alexa.EndpointHealth",
+                    "version":"3",
+                    properties: {
+                        supported: [
+                            {
+                                name: "connectivity"
+                            }
+                        ],
+                        retrievable: true
+                    }
+                },
+                ...
+            ]
+        }
+    }
+```
+
+The first key, `smartThing-v1` is the physical device's model number, while the second key, `1.00`, is the device's version. The keys within that represent the device's basic attributes and Smart Home capabilities. My thought was that both the physical device (model number) and its firmware version both dictate what capabilities it has, so that's how I opted to organize configuration. 
+
+As I revisit this logic, I **do** like the idea of keeping the complex nested structures for things like capabilities as part of the Alexa skill's source code, as these (should) be static for a given model and firmware version and generally only need to be retrieved by the Alexa Lambda. 
+
+However, I imagine that in a production scenario, you could have the same model number and firmware version built by multiple manufacturers, so it feels wrong to include this as a static attribute. I think it would be better to move this to either an attribute on a per-thing basis in the IoT device registry or to a separate data store like DynamoDB. 
+
 ## User Stories
 
 I've created the [Appendix - User Stories](./docs/appendix-user-stories.md) to document my (basic) understanding of the stories that a Smart Home Company, device manufacturer, and end-user might follow.
