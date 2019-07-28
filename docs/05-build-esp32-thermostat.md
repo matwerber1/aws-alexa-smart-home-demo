@@ -142,15 +142,17 @@ Now we will flash the thermostat code and AWS IoT certificates to your ESP32. If
 
 3. If you press your button on the red and blue LEDs toggle on/off, your button is working (the button does not affect the white LED):
 
-    Thermostat mode is HEAT: 
+    * Thermostat mode is HEAT: 
 
     <img src="./../images/heat-mode.jpg" width="45%" border="1" style="border-color: black">
 
-    Thermostat mode is COOL: 
+    * Thermostat mode is COOL: 
+
     <img src="./../images/cool-mode.jpg" width="45%" border="1" style="border-color: black">
     ![alt text](./../images/cool-mode.jpg)
 
-    Thermostat mode is OFF: 
+    * Thermostat mode is OFF: 
+    
     <img src="./../images/off-mode.jpg" width="45%" border="1" style="border-color: black">
     ![alt text](./../images/off-mode.jpg)
 
