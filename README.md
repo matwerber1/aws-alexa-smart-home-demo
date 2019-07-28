@@ -144,9 +144,9 @@ The challenge I ran in to was this:
 
 The only way I could solve for the problem above was to have the physical ESP32 thermostat clear the `desired` state when the user physically interacts to change the mode (i.e. pushes the mode button).
 
-I think the **theory** behind my solution is correct, but the actual implementation is faulty as I didn't account for scenarios where, for example, the device is disconnected from the internet and the user presses a button. In such a case, the command to "clear" the desired state would be dropped and when the device re-connects, we would again run into the same problem. 
+I think the **theory** behind my solution is correct, but the actual implementation is faulty as I didn't account for scenarios where, for example, the device is disconnected from the internet and the user presses a button. In such a case, the command to "clear" the desired state would be dropped and when the device re-connects, we would again run into the same problem. Perhaps incorporating timestamps into state requests make sense... e.g. if a delta is old (because of previously-lost connectivity), ignore it and clear desired state? Or, if a device was disconnected and the user physically changed its state, compare the timestamp of the physical state change with the timestamp of the desired state change and let the latest timestamp win? 
 
-Now, if your business use case was such that "orders from the cloud should always override user's physical interaction with the device', then this would be a non-issue. For normal retail and consumer smart home applications, I imagine user interaction should always take precedent. For commercial, industrial, and other large-scale use cases, perhaps cloud should always take precedent? 
+I suppose it depends on your specific use case and who/when/where/how disputes should be resolved. For ecample, if your business use case was such that "orders from the cloud should always override user's physical interaction with the device', then this would be a non-issue. For normal retail and consumer smart home applications, I imagine user interaction should always take precedent. For commercial, industrial, and other large-scale use cases, perhaps cloud should always take precedent? 
 
 Would love to hear thoughts from anyone that has production experience with this type of scenario. 
 
