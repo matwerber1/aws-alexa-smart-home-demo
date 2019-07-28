@@ -24,6 +24,13 @@ https://www.youtube.com/watch?v=Cc9Y0D2bzJ8
 
 Most of the project is done.... but there are still gaps in documentation and instructions. Please bear with me as I clean this up.
 
+## Disclaimer
+
+This is my first dive into AWS IoT + an Alexa skill. There are no doubt ways to do things better; some of my design choices may not be ideal. For example:
+
+* Should I just be using IoT thing attributes to store a mapping of thing to user instead of DynamoDB?
+* Is storing device configuration (e.g. capabilities) for discovery in a Lambda config file the right place to do it? 
+
 ## Prerequisites
 
 1. AWS Account with administrative access
