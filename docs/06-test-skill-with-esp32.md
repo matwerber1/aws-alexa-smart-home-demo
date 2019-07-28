@@ -19,7 +19,7 @@ The CloudFormation template in `template.yaml` has a `UsePhysicalDevice` paramet
 
     ```json
     "desired": {
-        thermostatMode: "COOL"
+        "thermostatMode": "COOL"
     }
     ```
 
