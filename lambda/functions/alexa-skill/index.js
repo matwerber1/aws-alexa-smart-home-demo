@@ -15,6 +15,21 @@ const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
 const REQUIRED_PAYLOAD_VERSION = "3";
 
+/*
+    TODO: 
+    
+    1. Consider re-writing to store endpoint-to-user mapping as an attribute
+       in IoT registry rather than DynamoDB; eliminate need for DDB? 
+
+    2. Consider storing attributes needed for discovery, e.g. manufacturer name, 
+       as attributes in IoT core, instead of a Lambda config file? 
+         - on second thought, the complex nested structure of things like the
+           Alexa capabilities means simple IoT attributes probably wouldn't
+           suffice. DynamoDB comes to mind, but it's easier to store this info
+           in a config file rather than an item in a DDB database. So, maybe
+           makes sense to keep it where it is (in discoveryConfig.js)
+*/
+
 // For debugging / test purposes if you do not have a physical device linked to
 // your Thing in the IoT Core Registry, set the value below to true; this will
 // copy your desired state changes to the reported state changes. Normally, 

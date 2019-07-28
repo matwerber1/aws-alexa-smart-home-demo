@@ -34,15 +34,40 @@ The instructions and images below assume you are using the exact same ESP32 dev 
 
 We will flash the ESP32 with [Mongoose OS](https://mongoose-os.com/), an open-source IoT operating system. Mongoose OS (MOS) supports C/C++ and Javascript. We will be using the Javascript version in this demo.  
 
-1. TODO: add instructions to create/generate device certs for your IoT thing and download locally. 
+## Generate and Download Device Certificates
 
+The CloudFormation template you deployed in previous steps created an AWS IoT "Thing" for you in the device registry. A registry `thing` is only a logical representation of a physical device. In order to create a link between a physical device and your thing, you must generate certificates and keys, attach them to your thing, and install them on your device. Then, when your device connects to AWS IoT Core's MQTT pub/sub broker, IoT Core will know which thing the device is based on its certificates. 
+
+1. Navigate to the [AWS IoT registry](https://us-east-1.console.aws.amazon.com/iot/home#/thinghub).
+
+2. Click the thing with a name similar to  `alexa-smart-home-demo-SmartHomeThing-1LW418RIHGL2X`
+
+3. Click **Security** on the left and then click the **Create certificate** button:
+
+    ![alt text](./../images/cert-01.png)
+
+4. On the next screen, you should see a **Certificate created!** message. Follow these steps: 
+
+    1. Download the device certificate and private key to the `esp32/fs` directory of your project repository. For this demo, you do not need to download the public key.
+
+    2. Click **Activate** to activate your certificate. 
+
+    3. Click **Attach a policy** in the lower right corner:
+
+    ![alt text](.//images/cert-02.png)
+
+5. The CloudFormation template you launched previously has already created an IoT certificate policy for you with a name similar to `alexa-smart-home-demo-IoTThingPolicy-ABCDEFG`. Search for this policy, check the box next to it, and click **Done**:
+
+    ![alt text](.//images/cert-03.png)
+
+## Flash ESP32 with Thermostat Code and AWS IoT Certificates
 2. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
 
-3. TODO: add instructions to copy certs to ESP32 (if not already part of the flash)
-
+## Configure WiFi on your ESP32
 4. TODO: add instructions to configure WIFI for the ESP32
 
-5. After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
+## Verify Connectivity to AWS IoT Core
+After a few moments, verify that your ESP32 is connected to AWS either via the white LED or via the messages in the MOS console.
 
 ## Next Steps
 
