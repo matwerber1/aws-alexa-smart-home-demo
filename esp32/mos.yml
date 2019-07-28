@@ -1,5 +1,5 @@
 author: mongoose-os
-description: A JS-enabled demo Mongoose OS firmware
+description: AWS IoT Alexa Smart Home Demo
 # arch: PLATFORM
 version: 1.0
 manifest_version: 2017-05-18

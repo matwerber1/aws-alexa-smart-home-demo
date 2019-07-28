@@ -60,6 +60,44 @@ The CloudFormation template you deployed in previous steps created an AWS IoT "T
 
     ![alt text](./../images/cert-03.png)
 
+## Prepare Mongoose OS Configuration File
+
+Before we flash your ESP32 with the thermostat code, we need to make a few changes to `/esp32/mos.yml` in your local project directory. This file controls the build process, including which libraries, environment variables, etc. that we use: 
+
+1. From the root of your local project directory, open the file `esp32/mos.yml`
+
+2. Within `esp32/mos.yml`, set the name of the MQTT SSL cert and SSL key to the names of the cert files you previously downloaded to the `esp32/fs` directory: 
+
+    ```yaml
+    - ["mqtt.ssl_cert", "67e48f5611-certificate.pem.crt"]
+    - ["mqtt.ssl_key", "67e48f5611-private.pem.key"]
+    ```
+
+3. Within `esp32/mos.yml`, set the name of your MQTT server to your custom AWS endpoint, which is shown in your [AWS IoT Core Settings](https://us-east-1.console.aws.amazon.com/iot/home#/settings)]: 
+
+    ```yaml
+    - ["mqtt.server", "a2mvse6841elo7-ats.iot.us-east-1.amazonaws.com:8883"]   
+    ```
+
+    Your AWS IoT Settings will be similar to below: 
+    ![alt text](./../images/iot-settings.png)
+
+5. Within `esp32/mos.yml`, set the name of your AWS IoT thing; note - this must exactly match the name of your thing as shown in the [AWS IoT Registry](https://us-east-1.console.aws.amazon.com/iot/home#/thinghub), since the Mongoose OS MQTT libraries use this value to determine the proper MQTT shadow topic: 
+
+    ```yaml
+    - ["aws.thing_name", "alexa-smart-home-demo-SmartHomeThing-1LW418RIHGL2X"]
+    ```
+
+    Your AWS IoT thing name will be similar to below: 
+    ![alt text](./../images/thing-name-registry.png)
+
+6. You can optionally uncomment the lines below and enter your WiFi SSID and password, though this step isn't required. We will later show you how to set these values wireless over Bluetooth: 
+
+    ```yaml
+    # - ["wifi.sta.ssid", "YOUR WIFI NAME"]
+    # - ["wifi.sta.pass", "YOUR WIFI PASSWORD"]
+    ```
+
 ## Flash ESP32 with Thermostat Code and AWS IoT Certificates
 2. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
 
