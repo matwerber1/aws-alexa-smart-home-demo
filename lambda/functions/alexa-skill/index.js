@@ -242,7 +242,7 @@ async function handleDiscovery(request, context, userId) {
         return alexaResponse;
     }
     catch (err) {
-        throw ("handleDiscovery() failed: " + err);
+        throw new Error("handleDiscovery() failed: " + err);
     }
 
 }
@@ -365,7 +365,19 @@ async function getUserEndpoints(userId) {
 }
 
 function getDeviceConfigFromIotThingAttributes(attributes) {
-    return discoveryConfig[attributes.modelNumber][attributes.firmwareVersion];
+    console.log(`Looking up configuration for modelNumber ${attributes.modelNumber}, firmware version ${attributes.firmwareVersion}...`);
+
+    if (discoveryConfig.hasOwnProperty(attributes.modelNumber)) {
+        if (discoveryConfig[attributes.modelNumber].hasOwnProperty(attributes.firmwareVersion)) {
+            return discoveryConfig[attributes.modelNumber][attributes.firmwareVersion];
+        }
+        else {
+            throw new Error(`Unknown firmware version ${attributes.firmwareVersion} for model ${attributes.modelNumber}, unable to get endpoint config.`);
+        }
+    }
+    else {
+        throw new Error(`Unknown model number ${attributes.modelNumber}, unable to get endpoint config.`);
+    }
 }
 
 function log(message1, message2) {
@@ -626,7 +638,7 @@ function convertTemperature(temperature, currentScale, desiredScale) {
         return convertCelsiusToFahrenheit(temperature);
     }
     else {
-        throw (`Unable to convert ${currentScale} to ${desiredScale}, unsupported temp scale.`);
+        throw new Error(`Unable to convert ${currentScale} to ${desiredScale}, unsupported temp scale.`);
     }
     
 }
