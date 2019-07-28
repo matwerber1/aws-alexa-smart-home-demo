@@ -1,7 +1,7 @@
 # aws-alexa-smart-home-demo
 
 ## Overview
-This project shows you how to build an Amazon Alexa skill to control a thermostat using the [Alexa Smart Home API](https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html).
+This project shows you how to build an Amazon Alexa skill to control a (mock) thermostat using the [Alexa Smart Home API](https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html) and an ESP32 development board (optional).
 
 Whereas many Alexa examples focus only on the AWS Lambda function and dummy JSON responses sent to/from the Alexa service, this project aims to give a more complete end-to-end demo by demonstrating ways that one might use Amazon DynamoDB, AWS IoT Core, Amazon Cognito, and other services. 
 
