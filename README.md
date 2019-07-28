@@ -67,7 +67,7 @@ A core component of our project is the IoT thing's [device shadow](https://docs.
 We need to maintain a mapping between your skill's users (stored in Cognito) with their registered thermostats (stored in AWS IoT Core). There are number of places and ways this mapping could be stored, but for this project, we have opted to use [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), a fully-managed NoSQL key-value database.
 
 
-### Design Decisions I question
+### Questionable Design Decisions
 
 This section contains design choices that I am unsure of or where I want to further explain my reasoning. 
 
@@ -121,6 +121,34 @@ The first key, `smartThing-v1` is the physical device's model number, while the 
 As I revisit this logic, I **do** like the idea of keeping the complex nested structures for things like capabilities as part of the Alexa skill's source code, as these (should) be static for a given model and firmware version and generally only need to be retrieved by the Alexa Lambda. 
 
 However, I imagine that in a production scenario, you could have the same model number and firmware version built by multiple manufacturers, so it feels wrong to include this as a static attribute. I think it would be better to move this to either an attribute on a per-thing basis in the IoT device registry or to a separate data store like DynamoDB. 
+
+#### Modifying Shadow's Desired State from the Physical Device
+
+Most of the literature I read calls for two de-facto rules:
+1. Physical device should only modify `reported` **never** modify `desired` state in the device shadow. 
+2. Cloud should only modify `desired` state; the physical device will receive the shadow delta via MQTT and act accordingly. 
+
+I agree with #2, but ran into challenges with this demo that could only be solved by breaking rule #1. 
+
+First, for this project, my functional requirements are such that:
+1. The thermostat should be controllable by both cloud-side and physical button on device
+2. The user's physical interaction with the thermostat should always overrule desired state (if any) previously set by the cloud
+
+The challenge I ran in to was this: 
+1. Hypothetically, say a user previously asked Alexa to set mode to COOL; Alexa (via Lambda) set `desired` state to `COOL`, the thermostat received a shadow delta via MQTT, and accordingly changed the mode to COOL and sent a `reported` state value of `COOL` back to the shadow. Desired and reported state match, we are at peace. 
+2. User walks up to the thermostat and presses a button to change the mode to `HEAT`. The device correctly changes the physical mode and then sends a shadow update of `reported = HEAT`. 
+3. AWS IoT Shadow Service now sees a delta in state, because `reported = HEAT` but `desired = COOL` (from previous Step 1)
+4. Shadow Service sends a shadow delta message to the thermostat (desired = COOL)
+5. Thermostat sees that desired state is COOL, changes physical state to COOL, and sends a shadow update of `reported = COOL`.
+6. Again, reported and desired state are in harmony and equal COOL, but our user wants the mode to be HEAT. 
+
+The only way I could solve for the problem above was to have the physical ESP32 thermostat clear the `desired` state when the user physically interacts to change the mode (i.e. pushes the mode button).
+
+I think the **theory** behind my solution is correct, but the actual implementation is faulty as I didn't account for scenarios where, for example, the device is disconnected from the internet and the user presses a button. In such a case, the command to "clear" the desired state would be dropped and when the device re-connects, we would again run into the same problem. 
+
+Now, if your business use case was such that "orders from the cloud should always override user's physical interaction with the device', then this would be a non-issue. For normal retail and consumer smart home applications, I imagine user interaction should always take precedent. For commercial, industrial, and other large-scale use cases, perhaps cloud should always take precedent? 
+
+Would love to hear thoughts from anyone that has production experience with this type of scenario. 
 
 ## User Stories
 
