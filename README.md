@@ -126,7 +126,7 @@ However, I imagine that in a production scenario, you could have the same model 
 
 Most of the literature I read calls for two de-facto rules:
 1. Physical device should only modify `reported` state and **never** modify `desired` state in the device shadow. 
-2. Cloud should only modify `desired` state; the physical device will receive the shadow delta via MQTT and act accordingly. 
+2. Cloud should only modify `desired` state and never modify `reported` state; only the device knows what `reported` state is. 
 
 I agree with #2, but ran into challenges with this demo that could only be solved by breaking rule #1. 
 
