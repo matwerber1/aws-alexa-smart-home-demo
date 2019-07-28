@@ -54,11 +54,11 @@ The CloudFormation template you deployed in previous steps created an AWS IoT "T
 
     3. Click **Attach a policy** in the lower right corner:
 
-    ![alt text](.//images/cert-02.png)
+    ![alt text](./../images/cert-02.png)
 
 5. The CloudFormation template you launched previously has already created an IoT certificate policy for you with a name similar to `alexa-smart-home-demo-IoTThingPolicy-ABCDEFG`. Search for this policy, check the box next to it, and click **Done**:
 
-    ![alt text](.//images/cert-03.png)
+    ![alt text](./../images/cert-03.png)
 
 ## Flash ESP32 with Thermostat Code and AWS IoT Certificates
 2. TODO: add instructions to flash ESP32 with contents of the /esp32 directory. 
