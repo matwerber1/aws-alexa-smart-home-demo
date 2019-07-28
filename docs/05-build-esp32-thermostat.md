@@ -146,10 +146,10 @@ Now we will flash the thermostat code and AWS IoT certificates to your ESP32. If
     ![alt text](./../images/heat-mode.jpg)
 
     Thermostat mode is COOL: 
-    ![alt text](./../images/heat-mode.jpg)
+    ![alt text](./../images/cool-mode.jpg)
 
     Thermostat mode is OFF: 
-    ![alt text](./../images/heat-mode.jpg)
+    ![alt text](./../images/off-mode.jpg)
 
 ## Configure WiFi on your ESP32
 
