@@ -66,7 +66,7 @@ Proceed as follows:
         "hashId": "userId_e478e49d-e8d9-4490-9b53-bcb0fba2f18b",
         "sortId": "thingName_alexa-smart-home-demo-SmartHomeThing-1LW418RIHGL2X",
         "thingName": "alexa-smart-home-demo-SmartHomeThing-1LW418RIHGL2X",
-        "userId": "userId_e478e49d-e8d9-4490-9b53-bcb0fba2f18b"
+        "userId": "e478e49d-e8d9-4490-9b53-bcb0fba2f18b"
     }
     ```
 
