@@ -1,18 +1,17 @@
 #!/bin/bash
 
-# Install dependencies
-#$(cd lambda/functions/cognito-verifyAuthToken && npm install)
-#$(cd lambda/functions/cfProvider-uuid && npm install)
-
 BUCKET=<your_bucket_name>
 STACK_NAME=alexa-smart-home-demo
 
 ALEXA_SKILL_ID=<your_alexa_skill_id>
 ALEXA_VENDOR_ID=<your_alexa_vendor_id>
 
+# Install Lambda function dependencies
+sam build
+
 sam package \
     --s3-bucket $BUCKET \
-    --template-file template.yaml \
+    --template-file .aws-sam/build/template.yaml \
     --output-template-file packaged.yaml
 
 sam deploy \

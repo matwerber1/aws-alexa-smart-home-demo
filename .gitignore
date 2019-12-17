@@ -2,8 +2,6 @@ packaged.yaml
 alexa
 node_modules/
 mydeploy.sh
-package-lock.json
-package.json
 backup.yaml
 .eslintrc.js
 web-app/
