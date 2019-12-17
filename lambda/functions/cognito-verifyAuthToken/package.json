@@ -1,4 +1,8 @@
 {
   "name": "cfprovider-uuid",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "https": "^1.0.0",
+    "node-jose": "^1.1.3"
+  }
 }
