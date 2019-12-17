@@ -252,3 +252,7 @@ $RECYCLE.BIN/
 */build/*
 
 # End of https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode
+
+
+!lambda/layers/cfn-response/nodejs/node_modules/cfn-response-async/index.js
+!lambda/layers/cfn-response/nodejs/node_modules/cfn-response-sync/index.js
