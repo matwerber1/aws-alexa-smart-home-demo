@@ -20,10 +20,6 @@ A picture is worth a thousand words:
 This video shows the ESP32 in action by asking Alexa to change the device's state and asking it for the current temperature: 
 https://www.youtube.com/watch?v=Cc9Y0D2bzJ8
 
-## Work in process
-
-Most of the project is done.... but there are still gaps in documentation and instructions. Please bear with me as I clean this up.
-
 ## Disclaimer
 
 This is my first dive into AWS IoT + an Alexa skill. There are no doubt ways to do things better; some of my design choices may not be ideal. For example:
