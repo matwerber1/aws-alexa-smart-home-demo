@@ -12,9 +12,13 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Service 
 
     [name_alexa_skill]: ./../images/name_alexa_skill.png
 
-4. Click **Create Skill**. You will be taken to a configuration page. We need to first create additional resources before we use their values to complete this page. For now, copy your **Skill ID** (e.g. amzn1.ask.skill.xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) into a text editor. You will need this value later.
+4. Click **Create Skill**. You will be taken to a configuration page. We need to first create additional resources before we use their values to complete this page. For now, copy your **Skill ID** (e.g. `amzn1.ask.skill.xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`) into a text editor. You will need this value later.
 
-5. Navigate to [https://developer.amazon.com/settings/console/mycid](https://developer.amazon.com/settings/console/mycid) and copy your **Alexa Vendor ID** into your text editor, along with your Skill ID. 
+5. Navigate to [https://developer.amazon.com/settings/console/mycid](https://developer.amazon.com/settings/console/mycid) and copy your **Alexa Vendor ID** into your text editor, along with your Skill ID. Be sure to use your `Vendor ID`, **not** your `Customer ID`:
+
+    ![vendor_id]
+
+    [vendor_id]: ./../images/vendor_id.png
 
 6. Open **deploy.sh** and enter your Alexa skill ID and vendor ID into their corresponding variables. Note, these values are considered secrets so you would not normally commit these to source in a production environment; you instead may want to manage them with a secrets manager like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/):
 
@@ -24,7 +28,7 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Service 
     ALEXA_VENDOR_ID=1234N12341234
     ```
 
-7. Edit **deploy.sh** and set the BUCKET variable to the name of a pre-existing S3 bucket to which you have write access. This bucket will store the artifacts used by CloudFormation to launch your stack. It's recommend that you leave the **STACK_NAME=** parameter set to **alexa-smart-home-demo** as we will reference this stack name in later steps. 
+7. Edit **deploy.sh** and set the `BUCKET=` variable to the name of a pre-existing S3 bucket to which you have write access. This bucket will store the artifacts used by CloudFormation to launch your stack. It's recommend that you leave the `STACK_NAME=alexa-smart-home-demo` as we will reference this stack name in later steps. 
 
     ```sh
     # deploy.sh
@@ -53,13 +57,36 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Service 
 
     2. Click the **Account Linking** tab of the Alexa skill console, and: 
 
-        1. Copy the value of the **AlexaAuthorizationURI** output from CloudFormation into the **Authorization URI** box of the Alexa configuration.
-        2. Copy the value of the **AlexaAccessTokenURI** output from CloudFormation into the **Access Token URI** box of the Alexa configuration.
-        3. Copy the value of the **AlexaClientId** output from CloudFormation into the **Client ID** box of the Alexa configuration.
+        1. Copy the value of the **AlexaAuthorizationURI** output from CloudFormation into the **Authorization URI** box of the Alexa configuration. It should look like this: 
+
+            ```
+            https://012345678910-alexa-smart-home-demo-domain.auth.us-east-1.amazoncognito.com/oauth2/authorize?response_type=code&client_id=fjiejfo4pvmkdirkfhg8572d03redirect_uri=https://pitangui.amazon.com/api/skill/link/FKEN3OMDOQ12&state=STATE
+            ```
+
+        2. Copy the value of the **AlexaAccessTokenURI** output from CloudFormation into the **Access Token URI** box of the Alexa configuration. It should look like this: 
+
+            ```
+            https://012345678910-alexa-smart-home-demo-domain.auth.us-east-1.amazoncognito.com/oauth2/token?state=STATE
+            ```
+        
+        3. Copy the value of the **AlexaClientId** output from CloudFormation into the **Client ID** box of the Alexa configuration. It should look like this: 
+
+            ```
+            fjiejfo4pvmkdirkfhg8572d03
+            ```
+        
         4. Click the link in the value field of **AlexaClientSecret** in CloudFormation; you will be taken to a secret in AWS Secrets Manager; scroll down and click **Retrieve secret value** and copy the value of **clientSecret** from AWS Secrets Manager into the **Client Secret** box of the Alexa configuration. 
+        
         5. Select **HTTP Basic (recommended)** as the **Client Authentication Scheme** in the Alexa configuration. 
-        6. Add **phone** and **openid** as values to the **Scope** section of the Alexa Configuration. Note - spelling and case must exactly match. 
+        
+        6. Add **phone** and **openid** as values to the **Scope** section of the Alexa Configuration. Note - spelling and case must exactly match.  It should look like this: 
+
+            ![link_scope]
+
+            [link_scope]: ./../images/link_scope.png
+            
         7. Leave **Domain List** and **Default Access Token Expiration Time** blank. 
+        
         8. Click Save.
 
 ## Next Steps
