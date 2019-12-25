@@ -70,7 +70,7 @@ Proceed as follows:
     }
     ```
 
-    **Note** - be sure to keep the "userId_" and "thingName_" prefix in the hashId and sortId columns, but do not keep them in the thingName and userId columns. 
+    **Note** - be sure to include the `userId_` and `thingName_` prefix in the `hashId` and `sortId` columns, but do **not** keep them in the `thingName` and `userId` columns. 
 
 ## Discover your Devices with Alexa
 
