@@ -556,7 +556,7 @@ Outputs:
         - - !GetAtt CognitoDomain.FullDomain
           - '/oauth2/authorize?response_type=code&client_id='
           - !Ref CognitoAlexaAppClient
-          - 'redirect_uri=https://pitangui.amazon.com/api/skill/link/'
+          - '&redirect_uri=https://pitangui.amazon.com/api/skill/link/'
           - !Ref AlexaVendorId
 #          - !Sub 
 #              - '{{resolve:secretsmanager:${AlexaSecretName}:SecretString:VendorId}}'
