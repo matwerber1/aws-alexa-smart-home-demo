@@ -18,7 +18,7 @@ Note - at this stage, we've created the backend but there is no physical device.
                 "scale": "FAHRENHEIT"
             },
             "connectivity": "OK",
-            "deviceType": "AlexaSmartHomeDemo",
+            "deviceType": "AlexaSmartHomeDemo"
         }
     }
     ```
