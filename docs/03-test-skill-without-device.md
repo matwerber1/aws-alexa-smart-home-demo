@@ -1,7 +1,7 @@
 
 # Test Your Alexa Skill (without a device)
 
-Note - at this stage, we've created the backend but there is no physical device. Thus, before we move forward, we must hard-code a "reported state" into our AWS IoT thing's device shadow in order to trick Alexa into thinking that the device is online and reporting back status. 
+Note - at this stage, we've created the backend but there is no physical device. Therefore, we must hard-code a **reported state** into our AWS IoT thing's shadow to make it look like a physical device is connected and reporting state. When the Alexa service invokes our Lambda to ask about current state (e.g. temperature, current heating or cooling mode, etc.), our Lambda will read from this shadow.  
 
 1. [Click here to open the AWS IoT Things window](https://us-east-1.console.aws.amazon.com/iot/home#/thinghub), and click thing with a name like `alexa-smart-home-demo-SmartHomeThing-XXXXXXXXXXX`, click **Shadow** on the left nav bar, click **Edit**, paste the info below, and click **Save**: 
 

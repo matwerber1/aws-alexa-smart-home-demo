@@ -1,7 +1,7 @@
 
 # Test Your Alexa Smart Home Thermostat Skill with an ESP32
 
-The CloudFormation template in `template.yaml` has a `UsePhysicalDevice` parameter that has a default value of false. If this value is false, the Alexa Lambda function will not actually interact with IoT Core and will instead just send back mock responses to the Alexa service. Now that we have a functioning ESP32 tied to our IoT Thing in IoT Core, we can modify the `UsePhysicalDevice` parameter to interact with our real device:
+The CloudFormation template in [template.yaml](./../template.yaml) has a `UsePhysicalDevice` parameter that has a default value of false. If this value is false, the Alexa Lambda function will not actually interact with IoT Core and will instead just send back mock responses to the Alexa service. Now that we have a functioning ESP32 tied to our IoT Thing in IoT Core, we can modify the `UsePhysicalDevice` parameter to interact with our real device:
 
 1. Navigate to the `alexa-smart-home-demo` CloudFormation stack, choose **Update stack**, and modify the parameter **UsePhysicalDevice** to have a value of `true`; deploy your updated stack. When this parameter is `false`, the Lambda function invoked by Alexa will directly update the AWS IoT thing's reported state to match the requested state from Alexa; when set to `true`, the Lambda will only update the desired state because our assumption is that there is a physical device that will receive the state change, physically update state, and report back the new state itself.
 
