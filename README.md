@@ -24,8 +24,9 @@ https://www.youtube.com/watch?v=Cc9Y0D2bzJ8
 
 This is my first dive into AWS IoT + an Alexa skill. There are no doubt ways to do things better; some of my design choices may not be ideal. For example:
 
-* Should I just be using IoT thing attributes to store a mapping of thing to user instead of DynamoDB?
-* Is storing device configuration (e.g. capabilities) for discovery in a Lambda config file the right place to do it? 
+* In this project, I use a DynamoDB table to store a mapping of each IoT Core thing name to each user's Cognito User Pool ID. Would it make more sense to just use an attribute in the IoT Core Device Registry to track the related user ID and remove the need for DynamoDB? 
+
+* In this project, I include a JSON file in the Alexa skill's Lambda handler function that describes the capabilities of the device (which the Lambda function uses to tell the Alexa service what your device can do). Is storing this configuration file with the Lambda function the right place to do so? I wonder if a DynamoDB table or AWS Systems Manager Parameter Store is a more appropriate place? 
 
 ## Prerequisites
 
