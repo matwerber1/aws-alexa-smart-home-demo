@@ -33,7 +33,7 @@ This is my first dive into AWS IoT + an Alexa skill. There are no doubt ways to 
 1. AWS Account with administrative access
 2. A pre-existing Amazon S3 Bucket to store CloudFormation templates (or, you can create one as you go)
 3. [Node10.x](https://nodejs.org/en/download/) and [npm](https://www.npmjs.com/get-npm) (to install Lambda dependencies before uploading to AWS)
-4. Optional - an ESP32 and related components, if you want to build the physical "thermostat" - [ESP32 Bill of Materials / Parts List](docs/esp32-parts-list.md)
+4. Optional - an ESP32 and related components, if you want to build the physical "thermostat" - [ESP32 Bill of Materials](./docs/05a-esp32-parts-list.md)
 
 ## Deployment
 
@@ -46,7 +46,7 @@ This is my first dive into AWS IoT + an Alexa skill. There are no doubt ways to 
 **Part 2 - Thermostat with ESP32 [OPTIONAL]:**
 
 4. [ESP32 First-time Setup](./docs/04-esp32-first-time-setup.md)
-5. [Build your ESP32 Thermostat](./docs/05-build-esp32-thermostat.md) (See [ESP32 parts list](./docs/05a-esp32-parts-list.md))
+5. [Build your ESP32 Thermostat](./docs/05-build-esp32-thermostat.md) (See [ESP32 Bill of Materials](./docs/05a-esp32-parts-list.md))
 6. [Test your skill and thermostat](./docs/06-test-skill-with-esp32.md)
 
 ## Architecture Overview
