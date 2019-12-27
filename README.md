@@ -55,9 +55,9 @@ At it's core, an Amazon Alexa skill is simply an [AWS Lambda function](https://a
 
 [Custom Alexa Skills](https://developer.amazon.com/docs/custom-skills/understanding-custom-skills.html) essentially allow you to do anything you want when your Lambda function gets invoked. Custom Alexa skills give you more control but require additional development and planning.
 
-As an alternative to a custom Alexa skill, the Amazon Alexa team has created a number of [pre-made Alexa Skill Kits and APIs](https://developer.amazon.com/docs/ask-overviews/understanding-the-different-types-of-skills.html) that give you a framework for rapidly developing skills for popular use cases. 
+As an alternative to a custom Alexa skill, the Amazon Alexa team has created a number of [pre-made Alexa Skill Kits and APIs](https://developer.amazon.com/docs/ask-overviews/understanding-the-different-types-of-skills.html) that give you a framework for rapidly developing skills for popular use cases. If your use case matches a skill kit's capabilities, it may be worth trading the flexibility of a custom skill for the time savings offerred by the skills kit. 
 
-While you could certainly build a smart home thermostat skill from scratch, we will use Alexa's [Smart Home Skill Kit & API](https://developer.amazon.com/docs/ask-overviews/understanding-the-different-types-of-skills.html#smart-home-skills-pre-built-model) to speed up development. 
+While you could certainly build a smart home thermostat skill from scratch, we will use Alexa's [Smart Home Skill Kit & API](https://developer.amazon.com/docs/ask-overviews/understanding-the-different-types-of-skills.html#smart-home-skills-pre-built-model) in this project to speed up development. 
 
 The Smart Home Skill Kit & API includes controller interfaces for common smart home devices, such as thermostats, locks, cameras, lights, and more. For this project, we will use the [Thermostat Controller Interface](https://developer.amazon.com/docs/smarthome/build-smart-home-skills-for-hvac-devices.html) and [Temperature Sensor Interface](https://developer.amazon.com/docs/device-apis/alexa-temperaturesensor.html).
 
