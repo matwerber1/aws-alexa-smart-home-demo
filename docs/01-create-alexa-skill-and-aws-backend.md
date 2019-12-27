@@ -8,17 +8,13 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Service 
 
 3. Give your skill a name, such as **alexa-smart-home-demo** and select **Smart Home** as the skill model. 
 
-    ![name_alexa_skill]
-
-    [name_alexa_skill]: ./../images/name_alexa_skill.png
+   <kbd><img src="./../images/name_alexa_skill.png"></kbd>
 
 4. Click **Create Skill**. You will be taken to a configuration page. We need to first create additional resources before we use their values to complete this page. For now, copy your **Skill ID** (e.g. `amzn1.ask.skill.xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`) into a text editor. You will need this value later.
 
 5. Navigate to [https://developer.amazon.com/settings/console/mycid](https://developer.amazon.com/settings/console/mycid) and copy your **Alexa Vendor ID** into your text editor, along with your Skill ID. Be sure to use your `Vendor ID`, **not** your `Customer ID`:
 
-    ![vendor_id]
-
-    [vendor_id]: ./../images/vendor_id.png
+    <kbd><img src="./../images/vendor_id.png" width="50%"></kbd>
 
 6. Open **deploy.sh** and enter your Alexa skill ID and vendor ID into their corresponding variables. Note, these values are considered secrets so you would not normally commit these to source in a production environment; you instead may want to manage them with a secrets manager like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/):
 
@@ -81,10 +77,8 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Service 
         
         6. Add **phone** and **openid** as values to the **Scope** section of the Alexa Configuration. Note - spelling and case must exactly match.  It should look like this: 
 
-            ![link_scope]
+            <kbd><img src="./../images/link_scope.png"></kbd>
 
-            [link_scope]: ./../images/link_scope.png
-            
         7. Leave **Domain List** and **Default Access Token Expiration Time** blank. 
         
         8. Click Save.

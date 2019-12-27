@@ -1,8 +1,10 @@
 # ESP 32 Bill of Materials for Smart Thermostat Demo
 
-I strongly recommend **shopping around** for IoT variety or starter kits, as these will give you lots of fun stuff for other projects and typically much lower cost than buying things below individually.
+Rather than buying the parts below individually, I strong recommend buying an IoT component "starter kit", as these will give you most of what you need at a typically lower cost. The IoT kits often come with many other sensors that you can use with additional projects, too. 
 
-The links below are merely examples. The one area where you **might** want to get the exact same item is the ESP32 itself. The one shown below is the one I used for this project. If you use the same board, you can use the same physical pins, board layout, GPIOs, etc. that I used. If you're wondering, I do not receive any form of affiliate incentive or compensation if you buy the items below.
+The one area where you **might** want to get the exact same item below is the ESP32 development board. There are many ESP32 dev boards out there, and you can likely use any one of them, but the boards often have slightly different pin layouts and capabilities. If you use the same board as me, you can use the same wiring pattern that I did. This will make things easier but its not a hard requirement. 
+
+If you're wondering, I do not receive any form of affiliate incentive or compensation if you buy the items below.
 
 ## Parts List
 
@@ -21,6 +23,18 @@ The links below are merely examples. The one area where you **might** want to ge
 7. [TACT Switch](https://www.amazon.com/microtivity-IM206-6x6x6mm-Tact-Switch/dp/B004RXKWI6/ref=sr_1_7?keywords=tact+switch&qid=1563662373&s=gateway&sr=8-7) - really, any push-button switch should work, wiring might vary slightly. 
 
 8. [Jumper wires](https://www.amazon.com/AUSTOR-Lengths-Assorted-Preformed-Breadboard/dp/B07CJYSL2T/ref=sr_1_2?keywords=jumper+wires+electronics&qid=1563662443&s=gateway&sr=8-2)
+
+## ESP32 Overview in 30 seconds
+
+The ESP32 is a popular microcontroller made by Espressif. The production version used in devices all over the world looks like this: 
+
+<img src="./../images/esp32_prod.png" width="25%" border="1" style="border-color: black">
+
+We will be using an ESP32 development board, which looks like this: 
+
+<img src="./../images/esp32_dev.png" width="50%" border="1" style="border-color: black">
+
+You can see that the development board also has an ESP32, but it is attached to an additional PCB that makes it easy to plug into a breadboard and experiment. 
 
 ## Electronic calculations
 
