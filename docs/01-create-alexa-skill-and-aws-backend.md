@@ -14,8 +14,10 @@ First, we create our Alexa Smart Home Skill in the Amazon-managed Alexa Service 
 
 5. Navigate to [https://developer.amazon.com/settings/console/mycid](https://developer.amazon.com/settings/console/mycid) and copy your **Alexa Vendor ID** into your text editor, along with your Skill ID. Be sure to use your `Vendor ID`, **not** your `Customer ID`:
 
-    <kbd><img src="./../images/vendor_id.png" width="50%"></kbd>
-
+    <p align="center">
+        <kbd><img src="./../images/vendor_id.png" width="50%"></kbd>
+    </p>
+    
 6. Open **deploy.sh** and enter your Alexa skill ID and vendor ID into their corresponding variables. Note, these values are considered secrets so you would not normally commit these to source in a production environment; you instead may want to manage them with a secrets manager like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/):
 
     ```sh

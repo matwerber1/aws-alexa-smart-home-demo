@@ -37,27 +37,27 @@ Note - at this stage, we've created the backend but there is no physical device.
 
     * From the Devices, screen, tap **All Devices**:
     
-        <img src="./../images/app-1.png" width="25%" border="1" style="border-color: black">
+        <img src="./../images/app-1.png" width="40%">
 
     * You should see a device named **Smart Thermostat**:
     
-        <img src="./../images/app-2.png" width="25%" border="1" style="border-color: black">
+        <img src="./../images/app-2.png" width="40%">
     
     * Note that you may optionally edit the thermostat's name:
 
-        <img src="./../images/app-4.png" width="25%" border="1" style="border-color: black">
+        <img src="./../images/app-4.png" width="40%">
     
     * This is what you will see if the device is connected (`{state: { reported: { "connectivity": "OK" } } }`) but thermostat mode is off (`{state: { reported: { "thermostatMode": "OFF" } } }`):
 
-        <img src="./../images/app-3.png" width="25%" border="1" style="border-color: black">
+        <img src="./../images/app-3.png" width="40%">
     
     * This is what you will see if the device is connected and the thermostat mode is set to "COOL":
 
-        <img src="./../images/app-5.png" width="25%" border="1" style="border-color: black">
+        <img src="./../images/app-5.png" width="40%">
 
     * This is what you will see if the device is connected and the thermostat mode is set to "HEAT":
 
-        <img src="./../images/app-6.png" width="25%" border="1" style="border-color: black">
+        <img src="./../images/app-6.png" width="40%">
 
 
 ## Next Steps

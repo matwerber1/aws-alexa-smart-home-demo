@@ -7,7 +7,9 @@ The CloudFormation template in [template.yaml](./../template.yaml) has a `UsePhy
 
 2. Within AWS IoT, open the device shadow of your smart home's AWS Thing in the device registry and view the device shadow. If your device is connected, it may look something like this: 
 
-    ![alt text](./../images/shadow-01.png)
+    <p align="center" width="50%">
+        <kbd><img src="./../images/shadow-01.png"></kbd>
+    </p>
 
 3. If your ESP32 is connected (white LED on), you should see the `uptime` value incrementing in the reported state. If you blow "hot" air directly over the DHT11 for a few seconds, you should eventually see the reported `temperature` and `humidity` change.
 
