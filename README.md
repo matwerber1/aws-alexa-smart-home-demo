@@ -51,6 +51,8 @@ This is my first dive into AWS IoT + an Alexa skill. There are no doubt ways to 
 
 ## Architecture Overview
 
+### Amazon Alexa skills
+
 At it's core, an Amazon Alexa skill is simply an [AWS Lambda function](https://aws.amazon.com/lambda/) that gets invoked by the AWS-managed Alexa service when a user speaks to their Alexa. You create a skill in the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask) and then link it to a Lambda function in your AWS account, and your users register to use the skill via the Alexa mobile app or website. You need an OAuth identity provider (IdP) to keep track of your registered users, and for this demo we will use [Amazon Cognito](https://aws.amazon.com/cognito/).
 
 [Custom Alexa Skills](https://developer.amazon.com/docs/custom-skills/understanding-custom-skills.html) essentially allow you to do anything you want when your Lambda function gets invoked. Custom Alexa skills give you more control but require additional development and planning.
@@ -61,12 +63,29 @@ While you could certainly build a smart home thermostat skill from scratch, we w
 
 The Smart Home Skill Kit & API includes controller interfaces for common smart home devices, such as thermostats, locks, cameras, lights, and more. For this project, we will use the [Thermostat Controller Interface](https://developer.amazon.com/docs/smarthome/build-smart-home-skills-for-hvac-devices.html) and [Temperature Sensor Interface](https://developer.amazon.com/docs/device-apis/alexa-temperaturesensor.html).
 
-We will use [AWS IoT Core](https://aws.amazon.com/iot-core/) to create a `thing`, which is a logical representation of a physical device. Even if you do not build the optional ESP32 thermostat in this project, this project allows you to interact with your IoT `thing` as if it were a physical device.
+### AWS IoT Core
 
-A core component of our project is the IoT thing's [device shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html), which is a JSON document managed by the AWS IoT Shadow Service that keeps track of the current device state, aka `reported state`, sent by our physical device (if used), and the `desired state` which we can change in the cloud manually, via an application, or - in this case - via interaction with Alexa. The shadow is a powerful feature that allows us to 'queue' messages or commands for our device when connectivity is lost. If our device is disconnected and we change the desired state in the shadow such that it doesn't match the last known reported state, the shadow service will notify the device of the difference between reported and desired state as soon as the device reestablishes a connection to the cloud. With a device shadow, we can decouple the remote control of our device with need for internet connectivity. 
+AWS offers several IoT services, including but not limited to AWS IoT Core, IoT Analytics, IoT Events, IoT SiteWise, IoT Things Graph, and Amazon FreeRTOS.
 
-We need to maintain a mapping between your skill's users (stored in Cognito) with their registered thermostats (stored in AWS IoT Core). There are number of places and ways this mapping could be stored, but for this project, we have opted to use [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), a fully-managed NoSQL key-value database.
+In this project, we only need to use [AWS IoT Core](https://aws.amazon.com/iot-core/) to create a `thing`, which is a logical representation of a physical device. Even if you do not build the optional ESP32 thermostat in this project, this project allows you to interact with your IoT `thing` as if it were a physical device.
 
+A core component of AWS IoT Core is the [device shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html), which is a JSON document stored in the cloud and which contains two key components: 
+
+* **`Reported state`**, which is a JSON message sent by a physical device to the AWS IoT Core service over MQTT. This message contains the device's current physical state (e.g. sensor readings, operating mode, etc.).
+
+* **`Desired state`**, which is a JSON document that represents the the target state we want our physical device to match (e.g. changing temperature, changing from heating to cooling mode, etc.).
+
+When the IoT Core shadow service detects a difference between the reported and desired state in the shadow, it will send a `delta` message over MQTT to the physical device. In normal operating conditions, we expect that the device will receive this delta, respond by changing its state (e.g. switching on/off, adjusting volume, etc.) and then report back its new `reported state` to the cloud. Once IoT Core see's that desired state matches reported state, IoT Core stops sending delta state messages. 
+
+In this project, we will use the device shadow's `reported state` to track things such as the current temperature, thermostat mode (heat, cool, or off), and current target temperature. When a user talks to Alexa to change our thermostat settings, Alexa will invoke a Lambda which will then change our device's `desired state` in the shadow. The shadow will detect the change and send the `delta` to the physical device to respond accordingly. 
+
+### Amazon Cognito and Amazon DynamoDB
+
+We will use Amazon Cognito User Pools to manage the users that sign up for our skill. 
+
+When a user invokes their Alexa skill, the Alexa service needs to know which AWS IoT `thing` belong to that user so that Alexa can read from (or update) the appropriate device shadow. 
+
+We will store the mapping between Cognito users and IoT things in [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), a fully-managed NoSQL key-value database.
 
 ### Questionable Design Decisions
 
