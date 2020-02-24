@@ -3,7 +3,7 @@
 In this optional section, we will wire up an ESP32 to act as a mock thermostat connected to our AWS backend. 
 
 ## Key Components
-
+ 
 * **Red and blue LEDs** used to indicate that thermostat is in HEAT or COOL mode, respectively
 * **White LED** to indicate that the device is successfully connected to your AWS IoT Core cloud backend
 * **DHT11** temp/humidity sensor from which the device will take readings and send to AWS IoT
@@ -136,7 +136,7 @@ Now we will flash the thermostat code and AWS IoT certificates to your ESP32. If
 
 1. Once the flash completes, you should see telemetry from the ESP32 display within your MOS console:
 
-    ![alt text](./../images/mos-telemetry.png)
+    ![alt text](./../images/esp32-telemetry.png)
 
 2. If you see something similar to `"temperature": { "value": 75, "scale": "FAHRENHEIT"}` and `"humidity": 37` in the telemetry, your DHT11 temp/humidity sensor is working. 
 
