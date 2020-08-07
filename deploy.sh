@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUCKET=<your_bucket_name>
+BUCKET=roboholics-esp32
 STACK_NAME=alexa-smart-home-demo
 
 ALEXA_SKILL_ID=amzn1.ask.skill.427f703f-4494-4c5a-90b3-7095119accc8
