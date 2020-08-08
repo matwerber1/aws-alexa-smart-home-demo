@@ -77,13 +77,13 @@ Proceed as follows:
     **Note** - be sure to include the `userId_` and `thingName_` prefix in the `hashId` and `sortId` columns, but do **not** keep them in the `thingName` and `userId` columns. 
   
   6. Navigate to [Lambda Functions list ](https://console.aws.amazon.com/lambda/home#/functions) and click on the `alexa-smart-home-demo-AlexaSkillFunction-XXXXXXXXXXXX`. Copy the ARN link present on the top right. Now open the Alexa developer console and navigate to Build->Smart Home. paste the link previously copied to the Default endpoint section.
-   <p align="center">
+    <p align="center">
         <kbd><img src="./../images/Capture1.JPG" width="80%" border="1" style="border-color: black"></kbd>
-   </p>
-   <p align="center">
+    </p>
+    <p align="center">
         <kbd><img src="./../images/Capture2.JPG" width="80%" border="1" style="border-color: black"></kbd>
-   </p>
-   
+    </p>
+
 ## Discover your Devices with Alexa
 
 Now that our backend has an association between our skill's user ID and our IoT thing, we can Ask Alexa (or use the Alexa web or mobile app) to discover our devices. The examples below show the mobile app, but you could just as easily ask your Alexa device "Alexa, discover devices".
