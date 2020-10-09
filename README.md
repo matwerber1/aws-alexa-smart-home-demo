@@ -5,7 +5,7 @@ This project shows you how to build an Amazon Alexa skill to control a (mock) th
 
 Whereas many Alexa examples focus only on the AWS Lambda function and dummy JSON responses sent to/from the Alexa service, this project aims to give a more complete end-to-end demo by demonstrating ways that one might use Amazon DynamoDB, AWS IoT Core, Amazon Cognito, and other services. 
 
-A picture is worth a thousand words: 
+They say a picture is worth a thousand words: 
 
 <img src="./images/architecture-overview.JPG" border="1" style="border-color: black;transform:rotate(180deg);">
 
